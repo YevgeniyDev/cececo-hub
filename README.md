@@ -12,6 +12,7 @@ cp backend/.env.example backend/.env
 cp frontend/.env.example frontend/.env.local
 
 docker compose up --build
+```
 
 Frontend: http://localhost:3000
 
