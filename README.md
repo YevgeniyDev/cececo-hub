@@ -19,5 +19,7 @@ Frontend: http://localhost:3000
 Backend Swagger: http://localhost:8000/docs
 
 Dev notes
+
 Backend runs Alembic migrations on start (compose command).
+
 Seed runs on backend startup (idempotent).
