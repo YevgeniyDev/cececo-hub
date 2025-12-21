@@ -54,8 +54,14 @@ def create_project(payload: ProjectCreate, db: Session = Depends(get_db)):
 def get_project_matches(
     project_id: int,
     strict_country: bool = Query(
-        default=False,  # ✅ CHANGED: not strict by default
+        default=False,
         description="If true, only investors with matching country are returned",
+    ),
+    limit: int = Query(
+        default=50,  # ✅ default high so UI can expand
+        ge=1,
+        le=50,
+        description="Max number of matches returned",
     ),
     db: Session = Depends(get_db),
 ):
@@ -64,7 +70,6 @@ def get_project_matches(
         raise HTTPException(status_code=404, detail="Project not found")
 
     investors = db.query(Investor).options(selectinload(Investor.countries)).all()
-
     matches = build_matches(project, investors)
 
     if strict_country and project.country_id:
@@ -74,7 +79,8 @@ def get_project_matches(
             if project.country_id in {c.id for c in (m["investor"].countries or [])}
         ]
 
-    # JSON-safe response
+    matches = matches[:limit]
+
     return [
         {
             "score": m["score"],

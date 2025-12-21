@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import styles from "../ui.module.css";
 
 const API_BASE =
@@ -18,126 +17,134 @@ async function fetchJSON(url) {
   return res.json();
 }
 
-export default function MatchClient() {
-  const sp = useSearchParams();
-  const projectId = sp.get("project_id") || "";
+export default function ProjectMatches({ projectId }) {
+  const [open, setOpen] = useState(false);
+  const [sameCountryOnly, setSameCountryOnly] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
-  const [projects, setProjects] = useState([]);
-  const [selected, setSelected] = useState(projectId);
   const [matches, setMatches] = useState([]);
-
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
 
+  // Fetch many once (50), display 3 by default, expand to 10+
+  const fetchLimit = 50;
+  const visibleLimit = expanded ? 10 : 3;
+
+  const url = useMemo(() => {
+    if (!projectId) return "";
+    const qs = new URLSearchParams();
+    qs.set("strict_country", String(sameCountryOnly));
+    qs.set("limit", String(fetchLimit));
+    return `${API_BASE}/api/v1/projects/${projectId}/matches?${qs.toString()}`;
+  }, [projectId, sameCountryOnly]);
+
   useEffect(() => {
-    setSelected(projectId);
-  }, [projectId]);
+    if (!open) return;
 
-  const matchesUrl = useMemo(() => {
-    if (!selected) return "";
-    return `${API_BASE}/api/v1/projects/${selected}/matches`;
-  }, [selected]);
+    let alive = true;
 
-  async function load() {
-    setLoading(true);
-    setErr("");
-    try {
-      const p = await fetchJSON(`${API_BASE}/api/v1/projects`);
-      setProjects(p);
-
-      if (selected) {
-        const m = await fetchJSON(matchesUrl);
-        setMatches(m);
-      } else {
+    async function run() {
+      setLoading(true);
+      setErr("");
+      try {
+        const data = await fetchJSON(url);
+        if (!alive) return;
+        setMatches(Array.isArray(data) ? data : []);
+      } catch (e) {
+        if (!alive) return;
         setMatches([]);
+        setErr(e?.message || "Failed to load matches");
+      } finally {
+        if (alive) setLoading(false);
       }
-    } catch (e) {
-      setErr(e?.message || "Failed to load match data");
-    } finally {
-      setLoading(false);
     }
-  }
 
-  useEffect(() => {
-    load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [matchesUrl]);
+    run();
+    return () => {
+      alive = false;
+    };
+  }, [open, url]);
+
+  const visible = matches.slice(0, visibleLimit);
 
   return (
-    <div className={styles.grid}>
-      <div className={styles.rowBetween}>
-        <div>
-          <h1 className={styles.sectionTitle}>Match</h1>
-          <p className={styles.sectionSub}>
-            Pick a project/startup → get ranked investors (MVP scoring).
-          </p>
-        </div>
+    <div style={{ marginTop: 10 }}>
+      <button
+        type="button"
+        className={styles.buttonSecondary}
+        onClick={() => setOpen((v) => !v)}
+      >
+        {open ? "Hide investors" : "Show investors"}
+      </button>
 
-        <div className={styles.filtersRow}>
-          <select
-            className={styles.select}
-            value={selected}
-            onChange={(e) => setSelected(e.target.value)}
-          >
-            <option value="">Select a project…</option>
-            {projects.map((p) => (
-              <option key={p.id} value={p.id}>
-                [{p.kind}] {p.title}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
+      {open ? (
+        <>
+          <div style={{ marginTop: 10 }}>
+            <label className={styles.meta} style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <input
+                type="checkbox"
+                checked={sameCountryOnly}
+                onChange={(e) => {
+                  setSameCountryOnly(e.target.checked);
+                  setExpanded(false);
+                }}
+              />
+              Same country only
+            </label>
+          </div>
 
-      {err ? (
-        <div className={styles.card}>
-          <div className={styles.tileTitle}>Error</div>
-          <div className={styles.meta}>{err}</div>
-        </div>
-      ) : null}
-
-      {loading ? (
-        <div className={styles.card}>
-          <div className={styles.meta}>Loading…</div>
-        </div>
-      ) : selected ? (
-        <div className={styles.tilesGrid}>
-          {matches.map((m, idx) => (
-            <div key={`${m.investor.id}-${idx}`} className={styles.card}>
-              <div className={styles.cardTop}>
-                <h3 className={styles.cardTitleSm}>{m.investor.name}</h3>
-                <span className={styles.badge}>Score: {m.score}</span>
+          {loading ? (
+            <div className={styles.meta} style={{ marginTop: 10 }}>
+              Loading…
+            </div>
+          ) : err ? (
+            <div className={styles.meta} style={{ marginTop: 10 }}>
+              {err}
+            </div>
+          ) : (
+            <>
+              <div className={styles.meta} style={{ marginTop: 10 }}>
+                Showing {visible.length} of {matches.length}
               </div>
 
-              <div className={styles.meta}>
-                Type:{" "}
-                <span className={styles.mono}>{m.investor.investor_type}</span>
-              </div>
+              <div style={{ display: "grid", gap: 10, marginTop: 10 }}>
+                {visible.map((m, idx) => (
+                  <div key={`${m.investor.id}-${idx}`} className={styles.cardSoft}>
+                    <div className={styles.cardTop}>
+                      <h3 className={styles.cardTitleSm}>{m.investor.name}</h3>
+                      <span className={styles.badge}>Score: {m.score}</span>
+                    </div>
 
-              <div className={styles.chips}>
-                {m.reasons?.map((r, i) => (
-                  <span key={i} className={styles.chip}>
-                    {r}
-                  </span>
+                    <div className={styles.meta}>
+                      Type: <span className={styles.mono}>{m.investor.investor_type}</span>
+                    </div>
+
+                    <div className={styles.chips}>
+                      {m.reasons?.map((r, i) => (
+                        <span key={i} className={styles.chip}>
+                          {r}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
                 ))}
               </div>
 
-              <div className={styles.kv}>
-                {m.investor.focus_sectors ? (
-                  <div>Sectors: {m.investor.focus_sectors}</div>
-                ) : null}
-                {m.investor.stages ? (
-                  <div>Stages: {m.investor.stages}</div>
-                ) : null}
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className={styles.card}>
-          <div className={styles.meta}>Select a project to see matches.</div>
-        </div>
-      )}
+              {matches.length > 3 ? (
+                <div style={{ marginTop: 10 }}>
+                  <button
+                    type="button"
+                    className={styles.buttonSecondary}
+                    onClick={() => setExpanded((v) => !v)}
+                  >
+                    {expanded ? "Show less" : "Show more"}
+                  </button>
+                </div>
+              ) : null}
+            </>
+          )}
+        </>
+      ) : null}
     </div>
   );
 }
