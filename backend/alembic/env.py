@@ -14,7 +14,7 @@ if config.config_file_name is not None:
 def get_database_url() -> str:
     return os.getenv(
         "DATABASE_URL",
-        "postgresql://cececo_bd_user:XhcXQlmQDQ7emoWSxRWpF5rF5DhvA8Nj@dpg-d54iuebe5dus73bkbt6g-a/cececo_bd"
+        "postgresql+psycopg://cececo_bd_user:XhcXQlmQDQ7emoWSxRWpF5rF5DhvA8Nj@dpg-d54iuebe5dus73bkbt6g-a/cececo_bd"
     )
 
 target_metadata = Base.metadata
