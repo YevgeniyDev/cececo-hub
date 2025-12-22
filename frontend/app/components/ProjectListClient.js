@@ -5,8 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE ||
-  process.env.NEXT_PUBLIC_API_URL ||
-  "http://localhost:8000";
+  process.env.API_INTERNAL_BASE ||
+  "https://cececo-hub.onrender.com/";
 
 async function fetchJSON(url) {
   const res = await fetch(url, { cache: "no-store" });
