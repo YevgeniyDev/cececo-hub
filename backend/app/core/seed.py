@@ -6,6 +6,14 @@ from app.db.session import SessionLocal
 from app.models.country import Country
 from app.models.project import Project
 from app.models.investor import Investor
+from app.models.country_policy import CountryPolicy
+from app.models.country_framework import CountryFramework
+from app.models.country_indicator import CountryIndicator
+
+from datetime import datetime, timezone, timedelta
+from app.models.news_item import NewsItem
+from app.models.resource import Resource
+
 
 SEED_COUNTRIES = [
     ("Azerbaijan", "AZ"),
@@ -63,6 +71,241 @@ def seed_initial_data() -> None:
         countries = db.query(Country).all()
         iso2_to_country = {c.iso2: c for c in countries}
         iso2_to_id = {c.iso2: c.id for c in countries}
+
+        # --- Knowledge hub curated content (MVP) ---
+        # If empty, seed. If not empty, skip (safe on restart).
+        if db.query(CountryIndicator).count() == 0:
+            # indicator values are normalized 0..1 (transparent MVP curated)
+            IND = {
+                "AZ": {
+                    "policy_readiness": (0.62, "Curated MVP", "Framework presence + active policy count (curated)."),
+                    "investment_attractiveness": (0.58, "Curated MVP", "Proxy from policy + stability placeholder (curated)."),
+                    "renewable_proxy": (0.70, "Curated MVP", "High wind + solar potential proxy (curated)."),
+                    "efficiency_need": (0.55, "Curated MVP", "Building/industry efficiency opportunity proxy (curated)."),
+                    "grid_proxy": (0.52, "Curated MVP", "Grid flexibility readiness proxy (curated)."),
+                },
+                "TR": {
+                    "policy_readiness": (0.78, "Curated MVP", "More mature incentive/market mechanisms (curated)."),
+                    "investment_attractiveness": (0.74, "Curated MVP", "Proxy from policy + market size (curated)."),
+                    "renewable_proxy": (0.77, "Curated MVP", "Strong solar + wind pipeline proxy (curated)."),
+                    "efficiency_need": (0.60, "Curated MVP", "Industrial + building efficiency opportunity proxy (curated)."),
+                    "grid_proxy": (0.66, "Curated MVP", "Moderate-to-good grid readiness proxy (curated)."),
+                },
+                "PK": {
+                    "policy_readiness": (0.54, "Curated MVP", "Policies exist but execution risk higher (curated)."),
+                    "investment_attractiveness": (0.50, "Curated MVP", "Proxy from policy + stability placeholder (curated)."),
+                    "renewable_proxy": (0.73, "Curated MVP", "High solar potential proxy (curated)."),
+                    "efficiency_need": (0.72, "Curated MVP", "High losses + efficiency opportunity proxy (curated)."),
+                    "grid_proxy": (0.45, "Curated MVP", "Grid constraints proxy (curated)."),
+                },
+                "KZ": {
+                    "policy_readiness": (0.67, "Curated MVP", "Clear targets + selected mechanisms (curated)."),
+                    "investment_attractiveness": (0.61, "Curated MVP", "Policy readiness + stability proxy (curated)."),
+                    "renewable_proxy": (0.75, "Curated MVP", "Large land + wind/solar potential proxy (curated)."),
+                    "efficiency_need": (0.65, "Curated MVP", "District heating + industry opportunity proxy (curated)."),
+                    "grid_proxy": (0.56, "Curated MVP", "Modernization needed proxy (curated)."),
+                },
+                "UZ": {
+                    "policy_readiness": (0.60, "Curated MVP", "Evolving frameworks + targets (curated)."),
+                    "investment_attractiveness": (0.56, "Curated MVP", "Policy + stability proxy (curated)."),
+                    "renewable_proxy": (0.74, "Curated MVP", "Solar potential proxy (curated)."),
+                    "efficiency_need": (0.63, "Curated MVP", "Buildings + agriculture opportunity proxy (curated)."),
+                    "grid_proxy": (0.50, "Curated MVP", "Grid modernization proxy (curated)."),
+                },
+                "KG": {
+                    "policy_readiness": (0.49, "Curated MVP", "Smaller market; frameworks less complete (curated)."),
+                    "investment_attractiveness": (0.47, "Curated MVP", "Proxy (curated)."),
+                    "renewable_proxy": (0.68, "Curated MVP", "Hydro potential proxy (curated)."),
+                    "efficiency_need": (0.58, "Curated MVP", "Efficiency opportunity proxy (curated)."),
+                    "grid_proxy": (0.44, "Curated MVP", "Grid constraints proxy (curated)."),
+                },
+            }
+
+            for iso2, kv in IND.items():
+                c = iso2_to_country.get(iso2)
+                if not c:
+                    continue
+                for key, (val, method, details) in kv.items():
+                    db.add(CountryIndicator(country_id=c.id, key=key, value=float(val), method=method, details=details))
+            db.commit()
+
+        if db.query(CountryPolicy).count() == 0:
+            POL = [
+                # (iso2, type, status, title, summary, why)
+                ("TR", "target", "active", "Renewables Capacity Targets", "National targets to expand renewable generation capacity and reduce emissions.", "Signals long-term demand and policy intent; supports bankability."),
+                ("TR", "incentive", "active", "Solar Rooftop Support", "Support mechanisms for distributed rooftop PV adoption (curated MVP entry).", "Improves project economics for SMEs and households."),
+                ("KZ", "strategy", "active", "Clean Energy Transition Roadmap", "Roadmap focusing on renewables scale-up, grid modernization, and efficiency.", "Gives investors a planning signal and helps prioritize project types."),
+                ("KZ", "market_rule", "planned", "Grid Flexibility Market Pilots", "Planned pilots for demand response / flexibility services (curated MVP entry).", "Enables storage and demand response business models."),
+                ("PK", "regulation", "active", "Net Metering Rules (Distributed)", "Rules enabling small-scale distributed generation export (curated MVP entry).", "Unlocks rooftop solar deployment and SME participation."),
+                ("UZ", "target", "active", "National Renewable Expansion Plan", "Government plan to increase renewable share via utility-scale projects.", "Creates pipeline visibility; helps align investor interest."),
+                ("AZ", "strategy", "active", "Renewables Development Strategy", "Strategy to expand wind/solar and diversify generation mix.", "Signals priority sectors and target timelines."),
+                ("KG", "incentive", "planned", "Small Hydro Modernization Support", "Planned support for modernization and safety upgrades for small hydro assets.", "Supports quick-win projects with measurable impact."),
+            ]
+            for iso2, ptype, status, title, summary, why in POL:
+                c = iso2_to_country.get(iso2)
+                if not c:
+                    continue
+                db.add(CountryPolicy(
+                    country_id=c.id,
+                    policy_type=ptype,
+                    status=status,
+                    title=title,
+                    summary=summary,
+                    why_it_matters=why,
+                    source_url=None,
+                ))
+            db.commit()
+
+        if db.query(CountryFramework).count() == 0:
+            FW = [
+                # (iso2, type, status, name, desc, why)
+                ("TR", "auction", "active", "Renewable Auctions", "Competitive procurement mechanism for utility-scale renewables (curated MVP entry).", "Improves price discovery and project bankability."),
+                ("TR", "ppa", "active", "PPA Contracting (Corporate/Utility)", "Framework for power purchase agreements (curated MVP entry).", "PPAs reduce revenue risk and attract private capital."),
+                ("KZ", "grid_code", "active", "Grid Connection Code", "Technical grid connection rules and compliance requirements (curated MVP entry).", "Reduces integration uncertainty for developers."),
+                ("PK", "net_metering", "active", "Net Metering Framework", "Defines eligibility, metering, and export settlement for distributed PV.", "Directly enables rooftop solar projects."),
+                ("UZ", "auction", "planned", "Renewable Auction Program", "Planned program for scaling utility-scale renewables via auctions.", "Signals future pipeline and procurement path."),
+                ("AZ", "ppa", "planned", "PPA Standardization", "Work towards standardized PPAs for renewables (curated MVP entry).", "Standard contracts reduce legal friction."),
+                ("KG", "efficiency_standard", "planned", "Efficiency Standards (Buildings)", "Planned minimum efficiency requirements / standards (curated MVP entry).", "Creates steady demand for efficiency solutions."),
+            ]
+            for iso2, ftype, status, name, desc, why in FW:
+                c = iso2_to_country.get(iso2)
+                if not c:
+                    continue
+                db.add(CountryFramework(
+                    country_id=c.id,
+                    framework_type=ftype,
+                    status=status,
+                    name=name,
+                    description=desc,
+                    why_it_matters=why,
+                    source_url=None,
+                ))
+            db.commit()
+
+        # Narrative fields on countries (seed if empty)
+        # (safe: only set if currently null)
+        NARR = {
+            "TR": (
+                "Türkiye has comparatively mature renewable market mechanisms and a growing pipeline across solar, wind, and grid modernization.",
+                "High potential in solar + wind scale-up, plus grid flexibility and permitting/tooling improvements.",
+                "Best near-term: rooftop PV acceleration, corporate PPAs, grid flexibility pilots. Watch-outs: interconnection constraints and permitting delays."
+            ),
+            "KZ": (
+                "Kazakhstan shows strong utility-scale potential and clear demand for grid flexibility and efficiency, especially in district heating and industry.",
+                "Wind/solar utility-scale, grid flexibility, and efficiency retrofits are priority areas with large scalable impact.",
+                "Best near-term: grid flexibility pilots, storage-enabling policy work, efficiency monitoring in district heating. Watch-outs: market rule maturity."
+            ),
+            "PK": (
+                "Pakistan has high efficiency opportunity and strong distributed solar potential, but execution risk and grid constraints are key considerations.",
+                "Solar (distributed + utility), high-loss reduction, building and industrial efficiency upgrades.",
+                "Best near-term: net metering rooftop PV, loss-reduction and monitoring solutions. Watch-outs: grid reliability and policy consistency."
+            ),
+            "UZ": (
+                "Uzbekistan is scaling renewables through planned procurement and policy evolution; agriculture-linked efficiency and solar are strong opportunities.",
+                "Utility-scale solar and efficiency for buildings/agriculture; enabling frameworks will shape investment pace.",
+                "Best near-term: solar project development readiness and efficiency tools. Watch-outs: procurement timing and framework rollout."
+            ),
+            "AZ": (
+                "Azerbaijan is diversifying generation with renewables; wind/solar development pathways and standardized contracts are key to accelerate investment.",
+                "Strong potential in wind + solar; enabling PPAs and grid integration rules will unlock scale.",
+                "Best near-term: resource screening + early-stage development tools; Watch-outs: contract standardization and bankability."
+            ),
+            "KG": (
+                "Kyrgyzstan can deliver quick wins via small hydro modernization and efficiency improvements, but investment scale is typically smaller.",
+                "Small hydro modernization, building efficiency standards, and practical monitoring tools.",
+                "Best near-term: modernization packages and efficiency pilots. Watch-outs: limited market scale and framework completeness."
+            ),
+        }
+
+        changed_notes = False
+        for iso2, (briefing, potential, action) in NARR.items():
+            c = iso2_to_country.get(iso2)
+            if not c:
+                continue
+            if c.briefing is None:
+                c.briefing = briefing
+                changed_notes = True
+            if c.potential_notes is None:
+                c.potential_notes = potential
+                changed_notes = True
+            if c.action_plan_notes is None:
+                c.action_plan_notes = action
+                changed_notes = True
+
+        if changed_notes:
+            db.commit()
+
+        # --- News feed seed (approved) ---
+        if db.query(NewsItem).count() == 0:
+            now = datetime.now(timezone.utc)
+            items = [
+                # (country_iso2 or None, impact_type, title, summary, tags, source_name, source_url, days_ago)
+                (None, "achievement", "CECECO region highlights: Clean energy momentum", "Round-up of notable clean energy announcements across member states (curated MVP news).", "cec eco,regional,clean energy", "CECECO (MVP)", None, 2),
+
+                ("TR", "policy", "Climate Change Adaptation Strategy and Action Plan (2024-2030)", "Climate change is one of the biggest environmental threats we face in today's world. This universal problem negatively affects not only individuals and countries, but also our common home, the world, and poses a serious risk to the sustainability of our planet. Current studies show that the global temperature increase has reached 1.1 °C compared to the pre-industrial era, and annual global greenhouse gas emissions have reached 59 billion tons of CO2 equivalent. At this critical juncture, we have the responsibility to take a firm stance towards reducing greenhouse gas emissions that cause climate change. In order to effectively combat climate change, it is necessary to accelerate efforts towards the goal of limiting the global temperature increase to 1.5 °C, as set out in the Paris Agreement. In this context, our country became a party to the Paris Agreement in 2021 and announced its Net Zero Emissions target for 2053. Following these developments, in 2015, Turkey updated its Intended National Contribution (NDC) submitted to the United Nations and increased its emission reduction target from 21% to 41% according to the reference scenario. These developments have demonstrated our country's commitment to combating climate change. Taking into account the 2053 Net Zero Emissions Target, the 12th Development Plan, the Medium-Term Program, and the NDC, it has been decided to prepare a new climate change strategy and action plan to determine Turkey's climate change mitigation targets for the coming period and to design the activities to be carried out within this scope. In this context, the Climate Change Mitigation Strategy and Action Plan 2024-2030 has been prepared with the contributions of all relevant stakeholders under the coordination of our Climate Change Presidency. This document outlines the process for combating climate change until 2030.", "strategy, action plan, climate change", "Republic of Türkiye Ministry of Environment, Urbanization and Climate Change, Directorate of Climate Change", "https://iklim.gov.tr/db/turkce/icerikler/files/%C4%B0klim%20De%C4%9Fi%C5%9Fikli%C4%9Fi%20Azalt%C4%B1m%20Stratejisi%20ve%20Eylem%20Plan%C4%B1%20(2024-2030).pdf", 7),
+                ("KZ", "regulation", "Kazakhstan advances grid flexibility pilots", "Regulatory progress supporting demand response and flexibility services (curated MVP news).", "grid flexibility,market rule", "Gov/MVP", None, 10),
+                ("PK", "regulation", "Pakistan strengthens distributed solar implementation", "Implementation update supporting distributed generation and reduction of losses (curated MVP news).", "net metering,distributed solar", "Regulator/MVP", None, 5),
+                ("UZ", "policy", "Uzbekistan accelerates utility-scale renewables pipeline", "Pipeline signal improving clarity for developers and investors (curated MVP news).", "auction,tender,solar", "Gov/MVP", None, 12),
+                ("AZ", "policy", "Azerbaijan signals progress on standard contracts", "Steps toward bankable PPAs to reduce friction for private investment (curated MVP news).", "ppa,contracts", "Gov/MVP", None, 9),
+                ("KG", "project", "Kyrgyzstan pilots small hydro modernization package", "Project-level milestone demonstrating near-term upgrade opportunities (curated MVP news).", "hydro,modernization", "Utility/MVP", None, 14),
+            ]
+
+            for iso2, impact_type, title, summary, tags, src_name, src_url, days_ago in items:
+                country_id = None
+                if iso2:
+                    c = iso2_to_country.get(iso2)
+                    if c:
+                        country_id = c.id
+
+                score = 10  # default; will be overwritten using simple scoring if you want
+                # keep it simple: reuse the service logic later if needed
+
+                db.add(
+                    NewsItem(
+                        country_id=country_id,
+                        status="approved",
+                        impact_type=impact_type,
+                        impact_score=score,
+                        title=title,
+                        summary=summary,
+                        tags=tags,
+                        source_name=src_name,
+                        source_url=src_url,
+                        published_at=now - timedelta(days=int(days_ago)),
+                    )
+                )
+            db.commit()
+
+        # --- Research library seed (approved examples) ---
+        if db.query(Resource).count() == 0:
+            now = datetime.now(timezone.utc)
+            examples = [
+                (None, "report", "Regional clean energy investment brief (MVP)", "Curated overview of investment mechanisms and enabling frameworks across CECECO member countries.", "https://example.com", "investment,policy,regional", None),
+                ("TR", "research", "Grid flexibility and demand response readiness (MVP)", "Research note on market design levers for flexibility services and storage integration.", "https://example.com", "grid,flexibility,storage", 30),
+            ]
+
+            for iso2, rtype, title, abstract, url, tags, days_ago in examples:
+                country_id = None
+                if iso2:
+                    c = iso2_to_country.get(iso2)
+                    if c:
+                        country_id = c.id
+
+                db.add(
+                    Resource(
+                        country_id=country_id,
+                        status="approved",
+                        resource_type=rtype,
+                        title=title,
+                        abstract=abstract,
+                        url=url,
+                        tags=tags,
+                        published_at=(now - timedelta(days=int(days_ago))) if days_ago else None,
+                        submitted_by_name="CECECO Hub (seed)",
+                        submitted_by_email=None,
+                    )
+                )
+            db.commit()
 
         # 2) Projects/Startups: seed only if table empty
         if db.query(Project).count() == 0:

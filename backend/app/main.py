@@ -5,6 +5,11 @@ from app.api.routes import router as api_router
 from app.db.base import Base
 from app.db.session import engine
 from app.core.seed import seed_initial_data
+from app.models.country_policy import CountryPolicy  # noqa: F401
+from app.models.country_framework import CountryFramework  # noqa: F401
+from app.models.country_indicator import CountryIndicator  # noqa: F401
+from app.models.news_item import NewsItem  # noqa: F401
+from app.models.resource import Resource  # noqa: F401
 
 app = FastAPI(title="CECECO Hub MVP")
 

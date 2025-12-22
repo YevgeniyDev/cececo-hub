@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import styles from "../ui.module.css";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE ||
@@ -16,6 +15,32 @@ async function fetchJSON(url) {
     throw new Error(text || `Request failed: ${res.status}`);
   }
   return res.json();
+}
+
+function Pill({ children }) {
+  return (
+    <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-700">
+      {children}
+    </span>
+  );
+}
+
+function Chip({ children }) {
+  return (
+    <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700">
+      {children}
+    </span>
+  );
+}
+
+function SkeletonRow() {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-4">
+      <div className="h-3 w-1/2 rounded-full bg-slate-100" />
+      <div className="mt-3 h-3 w-1/3 rounded-full bg-slate-100" />
+      <div className="mt-3 h-3 w-4/5 rounded-full bg-slate-100" />
+    </div>
+  );
 }
 
 export default function ProjectListClient({
@@ -39,7 +64,6 @@ export default function ProjectListClient({
   const [err, setErr] = useState("");
 
   // Match widget state (per project id)
-  // { [id]: { open: bool, loading: bool, error: string, data: [], showAll: bool, strictCountry: bool } }
   const [matchById, setMatchById] = useState({});
 
   // keep local state in sync when user navigates via links
@@ -83,8 +107,6 @@ export default function ProjectListClient({
       ]);
       setCountries(cList);
       setItems(pList);
-
-      // collapse match widgets on new list load
       setMatchById({});
     } catch (e) {
       setErr(e?.message || "Failed to load data");
@@ -108,10 +130,7 @@ export default function ProjectListClient({
     setMatchById((prev) => {
       const cur = prev[projectId];
       if (!cur) return prev;
-      return {
-        ...prev,
-        [projectId]: { ...cur, showAll: !cur.showAll },
-      };
+      return { ...prev, [projectId]: { ...cur, showAll: !cur.showAll } };
     });
   }
 
@@ -182,7 +201,6 @@ export default function ProjectListClient({
   }
 
   async function setStrictCountry(projectId, value) {
-    // update UI immediately
     setMatchById((prev) => {
       const cur = prev[projectId] || {
         open: true,
@@ -192,13 +210,9 @@ export default function ProjectListClient({
         showAll: false,
         strictCountry: false,
       };
-      return {
-        ...prev,
-        [projectId]: { ...cur, strictCountry: value },
-      };
+      return { ...prev, [projectId]: { ...cur, strictCountry: value } };
     });
 
-    // If not open, don't fetch yet
     const isOpen = matchById[projectId]?.open;
     if (!isOpen) return;
 
@@ -243,19 +257,22 @@ export default function ProjectListClient({
   }
 
   return (
-    <div className={styles.grid}>
-      <div className={styles.rowBetween}>
+    <div className="space-y-6">
+      {/* Header + Filters */}
+      <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className={styles.sectionTitle}>{title}</h1>
-          {subtitle ? <p className={styles.sectionSub}>{subtitle}</p> : null}
-          <div className={styles.smallMuted}>
-            API: <span className={styles.mono}>{API_BASE}</span>
+          <h1 className="text-3xl font-extrabold tracking-tight">{title}</h1>
+          {subtitle ? (
+            <p className="mt-2 max-w-3xl text-sm text-slate-600">{subtitle}</p>
+          ) : null}
+          <div className="mt-2 text-xs text-slate-500">
+            API: <span className="font-mono">{API_BASE}</span>
           </div>
         </div>
 
-        <div className={styles.filtersRow}>
+        <div className="flex flex-wrap items-center gap-2">
           <select
-            className={styles.select}
+            className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-800 shadow-sm outline-none hover:bg-slate-50 focus:border-slate-400"
             value={countryId}
             onChange={(e) => setCountryId(e.target.value)}
           >
@@ -268,7 +285,7 @@ export default function ProjectListClient({
           </select>
 
           <input
-            className={styles.input}
+            className="h-10 w-64 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-800 shadow-sm outline-none placeholder:text-slate-400 hover:bg-slate-50 focus:border-slate-400"
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search title/summary…"
@@ -276,24 +293,32 @@ export default function ProjectListClient({
         </div>
       </div>
 
+      {/* Error */}
       {err ? (
-        <div className={styles.card}>
-          <div className={styles.tileTitle}>Error</div>
-          <div className={styles.meta}>{err}</div>
-          <div style={{ marginTop: 10 }}>
-            <button className={styles.buttonSecondary} onClick={load}>
+        <div className="rounded-3xl border border-rose-200 bg-rose-50 p-5 text-rose-900">
+          <div className="font-bold">Error</div>
+          <div className="mt-1 text-sm text-rose-800">{err}</div>
+          <div className="mt-4">
+            <button
+              className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+              onClick={load}
+            >
               Retry
             </button>
           </div>
         </div>
       ) : null}
 
+      {/* Loading */}
       {loading ? (
-        <div className={styles.card}>
-          <div className={styles.meta}>Loading…</div>
+        <div className="grid gap-4 md:grid-cols-2">
+          <SkeletonRow />
+          <SkeletonRow />
+          <SkeletonRow />
+          <SkeletonRow />
         </div>
       ) : (
-        <div className={styles.tilesGrid}>
+        <div className="grid gap-4 md:grid-cols-2">
           {items.map((p) => {
             const matchState = matchById[p.id] || {
               open: false,
@@ -312,66 +337,70 @@ export default function ProjectListClient({
               : allMatches.slice(0, 3);
 
             return (
-              <div key={p.id} className={styles.card}>
-                <div className={styles.cardTop}>
-                  <h3 className={styles.cardTitleSm}>{p.title}</h3>
-                  <span className={styles.badge}>{p.kind}</span>
+              <div
+                key={p.id}
+                className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h3 className="text-base font-bold leading-snug">
+                      {p.title}
+                    </h3>
+                    <div className="mt-1 text-xs text-slate-500">
+                      ID: <span className="font-mono">{p.id}</span>
+                    </div>
+                  </div>
+
+                  <Pill>{p.kind}</Pill>
                 </div>
 
-                <p className={styles.cardSub}>{p.summary}</p>
+                <p className="mt-3 text-sm leading-6 text-slate-700">
+                  {p.summary}
+                </p>
 
-                <div className={styles.chips}>
-                  {p.sector ? (
-                    <span className={styles.chip}>Sector: {p.sector}</span>
-                  ) : null}
-                  {p.stage ? (
-                    <span className={styles.chip}>Stage: {p.stage}</span>
-                  ) : null}
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {p.sector ? <Chip>Sector: {p.sector}</Chip> : null}
+                  {p.stage ? <Chip>Stage: {p.stage}</Chip> : null}
                   {p.country_id ? (
-                    <span className={styles.chip}>
+                    <Chip>
                       Country:{" "}
                       {countryNameById.get(p.country_id) || `#${p.country_id}`}
-                    </span>
+                    </Chip>
                   ) : null}
                 </div>
 
-                <div className={styles.kv}>
-                  <div>
-                    ID: <span className={styles.mono}>{p.id}</span>
+                {p.website ? (
+                  <div className="mt-3 text-sm text-slate-700">
+                    Website:{" "}
+                    <a
+                      className="font-semibold text-slate-900 underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500"
+                      href={p.website}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      {p.website}
+                    </a>
                   </div>
-                  {p.website ? (
-                    <div>
-                      Website:{" "}
-                      <a
-                        className={styles.link}
-                        href={p.website}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        {p.website}
-                      </a>
-                    </div>
-                  ) : null}
-                </div>
+                ) : null}
 
-                {/* Inline Match Widget */}
-                <div className={styles.cardActionsRow}>
+                {/* Match widget */}
+                <div className="mt-4 flex flex-wrap items-center gap-3">
                   <button
-                    className={styles.buttonTiny}
+                    className="rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-800"
                     onClick={() => toggleMatches(p.id)}
                   >
                     {matchState.open ? "Hide investors" : "Match investors →"}
                   </button>
 
                   {matchState.open ? (
-                    <label className={styles.checkboxLabel}>
+                    <label className="inline-flex items-center gap-2 text-sm font-semibold text-slate-700">
                       <input
                         type="checkbox"
                         checked={!!matchState.strictCountry}
                         onChange={(e) =>
                           setStrictCountry(p.id, e.target.checked)
                         }
-                        style={{ marginRight: 6 }}
+                        className="h-4 w-4 accent-slate-900"
                       />
                       Same country only
                     </label>
@@ -379,58 +408,20 @@ export default function ProjectListClient({
                 </div>
 
                 {matchState.open ? (
-                  <div className={styles.matchBox}>
+                  <div className="mt-4 space-y-3 border-t border-slate-200 pt-4">
                     {matchState.loading ? (
-                      <div className={styles.skeletonBlock}>
-                        <div className={styles.matchRow}>
-                          <div
-                            className={styles.skeletonLine}
-                            style={{ width: "55%" }}
-                          />
-                          <div
-                            className={styles.skeletonLine}
-                            style={{ width: "35%" }}
-                          />
-                          <div
-                            className={styles.skeletonLine}
-                            style={{ width: "80%" }}
-                          />
-                        </div>
-                        <div className={styles.matchRow}>
-                          <div
-                            className={styles.skeletonLine}
-                            style={{ width: "50%" }}
-                          />
-                          <div
-                            className={styles.skeletonLine}
-                            style={{ width: "40%" }}
-                          />
-                          <div
-                            className={styles.skeletonLine}
-                            style={{ width: "75%" }}
-                          />
-                        </div>
-                        <div className={styles.matchRow}>
-                          <div
-                            className={styles.skeletonLine}
-                            style={{ width: "45%" }}
-                          />
-                          <div
-                            className={styles.skeletonLine}
-                            style={{ width: "30%" }}
-                          />
-                          <div
-                            className={styles.skeletonLine}
-                            style={{ width: "85%" }}
-                          />
-                        </div>
-                      </div>
+                      <>
+                        <SkeletonRow />
+                        <SkeletonRow />
+                      </>
                     ) : matchState.error ? (
-                      <div className={styles.meta}>{matchState.error}</div>
+                      <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
+                        {matchState.error}
+                      </div>
                     ) : Array.isArray(matchState.data) ? (
                       <>
-                        <div className={styles.miniRowBetween}>
-                          <div className={styles.meta}>
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="text-xs text-slate-500">
                             Showing{" "}
                             {matchState.showAll
                               ? allMatches.length
@@ -440,7 +431,7 @@ export default function ProjectListClient({
 
                           {allMatches.length > 3 ? (
                             <button
-                              className={styles.buttonLink}
+                              className="text-sm font-semibold text-slate-900 underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500"
                               onClick={() => toggleShowAll(p.id)}
                             >
                               {matchState.showAll ? "Show top 3" : "See all"}
@@ -448,49 +439,58 @@ export default function ProjectListClient({
                           ) : null}
                         </div>
 
-                        {shownMatches.map((m) => (
-                          <div key={m.investor.id} className={styles.matchRow}>
-                            <div className={styles.matchTop}>
-                              <div className={styles.matchName}>
-                                {m.investor.name}
-                              </div>
-                              <span className={styles.scoreBadge}>
-                                Score: {m.score}
-                              </span>
-                            </div>
-
-                            <div className={styles.meta}>
-                              Type:{" "}
-                              <span className={styles.mono}>
-                                {m.investor.investor_type}
-                              </span>
-                            </div>
-
-                            <div className={styles.chips}>
-                              {(m.reasons || []).map((r, i) => (
-                                <span key={i} className={styles.chip}>
-                                  {r}
-                                </span>
-                              ))}
-                            </div>
-
-                            {m.investor.website ? (
-                              <div className={styles.meta}>
-                                <a
-                                  className={styles.link}
-                                  href={m.investor.website}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                >
-                                  {m.investor.website}
-                                </a>
-                              </div>
-                            ) : null}
+                        {shownMatches.length === 0 ? (
+                          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+                            No matches.
                           </div>
-                        ))}
+                        ) : (
+                          shownMatches.map((m) => (
+                            <div
+                              key={m.investor.id}
+                              className="rounded-2xl border border-slate-200 bg-white p-4"
+                            >
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="text-sm font-bold">
+                                  {m.investor.name}
+                                </div>
+                                <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-700">
+                                  Score: {m.score}
+                                </span>
+                              </div>
+
+                              <div className="mt-1 text-xs text-slate-500">
+                                Type:{" "}
+                                <span className="font-mono">
+                                  {m.investor.investor_type}
+                                </span>
+                              </div>
+
+                              <div className="mt-2 flex flex-wrap gap-2">
+                                {(m.reasons || []).map((r, i) => (
+                                  <Chip key={i}>{r}</Chip>
+                                ))}
+                              </div>
+
+                              {m.investor.website ? (
+                                <div className="mt-2 text-sm">
+                                  <a
+                                    className="font-semibold text-slate-900 underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500"
+                                    href={m.investor.website}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                  >
+                                    {m.investor.website}
+                                  </a>
+                                </div>
+                              ) : null}
+                            </div>
+                          ))
+                        )}
                       </>
                     ) : (
-                      <div className={styles.meta}>No matches.</div>
+                      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+                        No matches.
+                      </div>
                     )}
                   </div>
                 ) : null}

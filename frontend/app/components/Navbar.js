@@ -1,119 +1,66 @@
 "use client";
 
 import { useState } from "react";
-import styles from "../ui.module.css";
 import NavLink from "./NavLink";
+
+const links = [
+  { href: "/", label: "Home" },
+  { href: "/news", label: "News" },
+  { href: "/countries", label: "Countries" },
+  { href: "/projects", label: "Projects" },
+  { href: "/startups", label: "Startups" },
+  { href: "/investors", label: "Investors" },
+];
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
 
-  // Close menu when clicking a link
   function close() {
     setOpen(false);
   }
 
   return (
-    <div className={styles.navWrap}>
-      {/* Desktop nav */}
-      <nav className={styles.navDesktop}>
-        <NavLink
-          href="/"
-          className={styles.navLink}
-          activeClassName={styles.navLinkActive}
-        >
-          Home
-        </NavLink>
-        <NavLink
-          href="/countries"
-          className={styles.navLink}
-          activeClassName={styles.navLinkActive}
-        >
-          Countries
-        </NavLink>
-        <NavLink
-          href="/projects"
-          className={styles.navLink}
-          activeClassName={styles.navLinkActive}
-        >
-          Projects
-        </NavLink>
-        <NavLink
-          href="/startups"
-          className={styles.navLink}
-          activeClassName={styles.navLinkActive}
-        >
-          Startups
-        </NavLink>
-        <NavLink
-          href="/investors"
-          className={styles.navLink}
-          activeClassName={styles.navLinkActive}
-        >
-          Investors
-        </NavLink>
+    <div className="relative">
+      {/* Desktop */}
+      <nav className="hidden items-center gap-1 sm:flex">
+        {links.map((l) => (
+          <NavLink
+            key={l.href}
+            href={l.href}
+            className="rounded-full px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+            activeClassName="bg-slate-900 text-white hover:bg-slate-900"
+          >
+            {l.label}
+          </NavLink>
+        ))}
       </nav>
 
-      {/* Mobile hamburger */}
+      {/* Mobile toggle */}
       <button
-        className={`${styles.hamburger} ${open ? styles.hamburgerOpen : ""}`}
+        className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50 sm:hidden"
         onClick={() => setOpen((v) => !v)}
         aria-label="Toggle menu"
         aria-expanded={open}
       >
-        <div className={styles.hamburgerIcon}>
-          <span />
-          <span />
-          <span />
-        </div>
+        {open ? "Close" : "Menu"}
       </button>
 
       {/* Mobile dropdown */}
       {open && (
-        <div className={styles.mobileMenu}>
-          <NavLink
-            href="/"
-            className={styles.mobileLink}
-            activeClassName={styles.mobileLinkActive}
-            onClick={close}
-          >
-            Home
-          </NavLink>
-
-          <NavLink
-            href="/countries"
-            className={styles.mobileLink}
-            activeClassName={styles.mobileLinkActive}
-            onClick={close}
-          >
-            Countries
-          </NavLink>
-
-          <NavLink
-            href="/projects"
-            className={styles.mobileLink}
-            activeClassName={styles.mobileLinkActive}
-            onClick={close}
-          >
-            Projects
-          </NavLink>
-
-          <NavLink
-            href="/startups"
-            className={styles.mobileLink}
-            activeClassName={styles.mobileLinkActive}
-            onClick={close}
-          >
-            Startups
-          </NavLink>
-
-          <NavLink
-            href="/investors"
-            className={styles.mobileLink}
-            activeClassName={styles.mobileLinkActive}
-            onClick={close}
-          >
-            Investors
-          </NavLink>
+        <div className="absolute right-0 top-12 w-56 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg sm:hidden">
+          <div className="p-2">
+            {links.map((l) => (
+              <NavLink
+                key={l.href}
+                href={l.href}
+                onClick={close}
+                className="block rounded-xl px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+                activeClassName="bg-slate-900 text-white hover:bg-slate-900"
+              >
+                {l.label}
+              </NavLink>
+            ))}
+          </div>
         </div>
       )}
     </div>

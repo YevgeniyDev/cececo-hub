@@ -5,3 +5,4 @@ DATABASE_URL = os.getenv(
     "postgresql+psycopg://cececo:cececo@localhost:5432/cececo"
 )
 JWT_SECRET = os.getenv("JWT_SECRET", "dev-secret-change-me")
+ADMIN_TOKEN = os.getenv("ADMIN_TOKEN", "")

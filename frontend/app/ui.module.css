@@ -619,3 +619,74 @@
 .checkboxLabel:hover {
   opacity: 0.85;
 }
+
+/* Knowledge hub */
+.kHubGrid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  margin-top: 12px;
+}
+
+.kHubMetric {
+  border: 1px solid #eee;
+  border-radius: 14px;
+  padding: 12px;
+  background: #fff;
+  display: grid;
+  gap: 6px;
+}
+
+.kHubMetricLabel {
+  font-size: 12px;
+  color: #475569;
+  font-weight: 700;
+}
+
+.kHubMetricValue {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.kHubTwoCol {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  margin-top: 10px;
+}
+
+.kHubSubTitle {
+  margin: 0 0 8px 0;
+  font-size: 13px;
+  font-weight: 800;
+  color: #0f172a;
+  opacity: 0.85;
+}
+
+.kHubStack {
+  display: grid;
+  gap: 10px;
+}
+
+.kHubItem {
+  border: 1px solid #eee;
+  border-radius: 14px;
+  padding: 12px;
+  background: #fff;
+}
+
+.kHubItemTop {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.kHubItemTitle {
+  font-weight: 800;
+}
+
+.kHubWhy {
+  margin: 10px 0 0 0;
+  color: #111;
+}
