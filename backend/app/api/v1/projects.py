@@ -58,7 +58,7 @@ def get_project_matches(
         description="If true, only investors with matching country are returned",
     ),
     limit: int = Query(
-        default=50,  # ✅ default high so UI can expand
+        default=50,
         ge=1,
         le=50,
         description="Max number of matches returned",
@@ -70,21 +70,16 @@ def get_project_matches(
         raise HTTPException(status_code=404, detail="Project not found")
 
     investors = db.query(Investor).options(selectinload(Investor.countries)).all()
-    matches = build_matches(project, investors)
-
-    if strict_country and project.country_id:
-        matches = [
-            m
-            for m in matches
-            if project.country_id in {c.id for c in (m["investor"].countries or [])}
-        ]
-
-    matches = matches[:limit]
+    matches = build_matches(project, investors, strict_country=strict_country, limit=limit)
 
     return [
         {
-            "score": m["score"],
-            "reasons": m["reasons"],
+            "score": m["score"],                 # legacy
+            "score_100": m["score_100"],         # new
+            "why": m["why"],                     # new
+            "score_breakdown": m["score_breakdown"],  # new
+            "reason_points": m["reason_points"],       # new
+            "reasons": m["reasons"],             # legacy (keep)
             "investor": {
                 "id": m["investor"].id,
                 "name": m["investor"].name,

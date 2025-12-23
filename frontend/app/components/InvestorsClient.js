@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE ||
+const API_BASE = (
   process.env.API_INTERNAL_BASE ||
-  "https://cececo-hub.onrender.com/";
+  process.env.NEXT_PUBLIC_API_BASE ||
+  "https://cececo-hub.onrender.com"
+).replace(/\/+$/, "");
 
 async function fetchJSON(url) {
   const res = await fetch(url, { cache: "no-store" });
@@ -65,19 +67,54 @@ export default function InvestorsClient({
   title = "Investors",
   subtitle = "",
 }) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // URL -> state
+  const urlQ = searchParams.get("q") || "";
+  const urlType = searchParams.get("investor_type") || "";
+  const urlCountryId = searchParams.get("country_id") || "";
+
   const [items, setItems] = useState([]);
-  const [q, setQ] = useState("");
-  const [investorType, setInvestorType] = useState("");
+  const [q, setQ] = useState(urlQ);
+  const [investorType, setInvestorType] = useState(urlType);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
   const [countries, setCountries] = useState([]);
-  const [countryId, setCountryId] = useState("");
+  const [countryId, setCountryId] = useState(urlCountryId);
+
+  // keep local state in sync when user navigates via links
+  useEffect(() => {
+    setQ(urlQ);
+    setInvestorType(urlType);
+    setCountryId(urlCountryId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [urlQ, urlType, urlCountryId]);
+
+  // State -> URL
+  useEffect(() => {
+    const sp = new URLSearchParams(searchParams.toString());
+
+    if (q.trim()) sp.set("q", q.trim());
+    else sp.delete("q");
+
+    if (investorType) sp.set("investor_type", investorType);
+    else sp.delete("investor_type");
+
+    if (countryId) sp.set("country_id", String(countryId));
+    else sp.delete("country_id");
+
+    const next = sp.toString();
+    const current = searchParams.toString();
+    if (next !== current) router.replace(`?${next}`, { scroll: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [q, investorType, countryId]);
 
   const params = useMemo(() => {
     const p = new URLSearchParams();
     if (q.trim()) p.set("q", q.trim());
     if (investorType) p.set("investor_type", investorType);
-    if (countryId) p.set("country_id", countryId);
+    if (countryId) p.set("country_id", String(countryId));
     return p.toString();
   }, [q, investorType, countryId]);
 
@@ -144,12 +181,25 @@ export default function InvestorsClient({
             ))}
           </select>
 
-          <input
-            className="h-10 w-64 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-800 shadow-sm outline-none placeholder:text-slate-400 hover:bg-slate-50 focus:border-slate-400"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Search name / sectors / stages…"
-          />
+          <div className="relative">
+            <input
+              className="h-10 w-64 rounded-xl border border-slate-200 bg-white pl-3 pr-9 text-sm text-slate-800 shadow-sm outline-none placeholder:text-slate-400 hover:bg-slate-50 focus:border-slate-400"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Search name / sectors / stages…"
+            />
+
+            {q ? (
+              <button
+                type="button"
+                onClick={() => setQ("")}
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                aria-label="Clear search"
+              >
+                ✕
+              </button>
+            ) : null}
+          </div>
         </div>
       </div>
 

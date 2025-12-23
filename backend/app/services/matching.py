@@ -19,16 +19,40 @@ def _country_match(project: Project, investor: Investor) -> bool:
     return project.country_id in inv_country_ids
 
 
-def score_investor_for_project(project: Project, investor: Investor) -> tuple[int, list[str], dict[str, int], list[str]]:
+def _build_why(*, breakdown: dict[str, int]) -> str:
+    parts: list[str] = []
+    if breakdown.get("sector"):
+        parts.append("sector alignment")
+    if breakdown.get("country"):
+        parts.append("geo fit")
+    if breakdown.get("stage"):
+        parts.append("stage fit")
+
+    if not parts:
+        return "Limited direct alignment; included for broader ecosystem visibility (MVP)."
+
+    if len(parts) == 1:
+        return f"Recommended due to strong {parts[0]}."
+    if len(parts) == 2:
+        return f"Recommended due to strong {parts[0]} and {parts[1]}."
+    return f"Recommended due to strong {parts[0]}, {parts[1]}, and {parts[2]}."
+
+
+def score_investor_for_project(
+    project: Project, investor: Investor
+) -> tuple[int, list[str], dict[str, int], list[str], list[dict[str, Any]], str]:
     """
     Returns:
       - raw_score: int (legacy, 0..5)
-      - reasons: list[str] (legacy)
+      - reasons: list[str] (legacy strings)
       - breakdown: dict[str, int] (0..100 contribution buckets)
       - badges: list[str] (short labels for UI)
+      - reason_points: list[{"label": str, "points": int}] (new, UI-friendly)
+      - why: str (new, single sentence)
     """
     reasons: list[str] = []
     badges: list[str] = []
+    reason_points: list[dict[str, Any]] = []
 
     raw_score = 0
 
@@ -44,6 +68,7 @@ def score_investor_for_project(project: Project, investor: Investor) -> tuple[in
         reasons.append("Country match")
         badges.append("Strong geo fit")
         breakdown["country"] = 40
+        reason_points.append({"label": "Country match", "points": 40})
 
     # Sector match (+2) -> 40
     proj_sector = (project.sector or "").strip().lower()
@@ -53,6 +78,7 @@ def score_investor_for_project(project: Project, investor: Investor) -> tuple[in
         reasons.append(f"Sector match: {project.sector}")
         badges.append("Sector match")
         breakdown["sector"] = 40
+        reason_points.append({"label": f"Sector match: {project.sector}", "points": 40})
 
     # Stage match (+1) -> 20
     proj_stage = (project.stage or "").strip().lower()
@@ -62,12 +88,15 @@ def score_investor_for_project(project: Project, investor: Investor) -> tuple[in
         reasons.append(f"Stage match: {project.stage}")
         badges.append("Stage aligned")
         breakdown["stage"] = 20
+        reason_points.append({"label": f"Stage match: {project.stage}", "points": 20})
 
     if not reasons:
         reasons.append("No direct country/sector/stage match (MVP)")
         badges.append("Weak match")
 
-    return raw_score, reasons, breakdown, badges
+    why = _build_why(breakdown=breakdown)
+
+    return raw_score, reasons, breakdown, badges, reason_points, why
 
 
 def build_matches(
@@ -83,7 +112,7 @@ def build_matches(
         if strict_country and project.country_id and not _country_match(project, inv):
             continue
 
-        raw_score, reasons, breakdown, badges = score_investor_for_project(project, inv)
+        raw_score, reasons, breakdown, badges, reason_points, why = score_investor_for_project(project, inv)
 
         score_100 = breakdown["country"] + breakdown["sector"] + breakdown["stage"]
 
@@ -92,9 +121,11 @@ def build_matches(
                 "investor": inv,
                 "score": raw_score,          # legacy (0..5)
                 "score_100": score_100,      # new (0..100)
-                "reasons": reasons,
+                "reasons": reasons,          # legacy strings (still useful)
                 "score_breakdown": breakdown,
                 "badges": badges,
+                "reason_points": reason_points,
+                "why": why,
             }
         )
 

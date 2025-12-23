@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE ||
   process.env.API_INTERNAL_BASE ||
-  "https://cececo-hub.onrender.com/";
+  "https://cececo-hub.onrender.com";
 
 async function fetchJSON(url) {
   const res = await fetch(url, { cache: "no-store" });
@@ -70,7 +70,6 @@ export default function ProjectListClient({
   useEffect(() => {
     setCountryId(urlCountryId);
     setQ(urlQ);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [urlCountryId, urlQ]);
 
   // State -> URL
@@ -284,12 +283,25 @@ export default function ProjectListClient({
             ))}
           </select>
 
-          <input
-            className="h-10 w-64 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-800 shadow-sm outline-none placeholder:text-slate-400 hover:bg-slate-50 focus:border-slate-400"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Search title/summary…"
-          />
+          <div className="relative">
+            <input
+              className="h-10 w-64 rounded-xl border border-slate-200 bg-white pl-3 pr-9 text-sm text-slate-800 shadow-sm outline-none placeholder:text-slate-400 hover:bg-slate-50 focus:border-slate-400"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Search title/summary…"
+            />
+
+            {q ? (
+              <button
+                type="button"
+                onClick={() => setQ("")}
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                aria-label="Clear search"
+              >
+                ✕
+              </button>
+            ) : null}
+          </div>
         </div>
       </div>
 
@@ -454,21 +466,40 @@ export default function ProjectListClient({
                                   {m.investor.name}
                                 </div>
                                 <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-700">
-                                  Score: {m.score}
+                                  Match:{" "}
+                                  {typeof m.score_100 === "number"
+                                    ? m.score_100
+                                    : 0}{" "}
+                                  / 100
                                 </span>
                               </div>
 
                               <div className="mt-1 text-xs text-slate-500">
                                 Type:{" "}
+                                {m.why ? (
+                                  <div className="mt-2 text-sm text-slate-700">
+                                    {m.why}
+                                  </div>
+                                ) : null}
                                 <span className="font-mono">
                                   {m.investor.investor_type}
                                 </span>
                               </div>
 
                               <div className="mt-2 flex flex-wrap gap-2">
-                                {(m.reasons || []).map((r, i) => (
-                                  <Chip key={i}>{r}</Chip>
-                                ))}
+                                {Array.isArray(m.reason_points) &&
+                                m.reason_points.length
+                                  ? m.reason_points.map((rp, i) => (
+                                      <Chip key={i}>
+                                        {rp.label}
+                                        {typeof rp.points === "number"
+                                          ? ` (+${rp.points})`
+                                          : ""}
+                                      </Chip>
+                                    ))
+                                  : (m.reasons || []).map((r, i) => (
+                                      <Chip key={i}>{r}</Chip>
+                                    ))}
                               </div>
 
                               {m.investor.website ? (
@@ -483,6 +514,21 @@ export default function ProjectListClient({
                                   </a>
                                 </div>
                               ) : null}
+
+                              <div className="mt-3 flex flex-wrap items-center gap-2">
+                                <button
+                                  className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-900 hover:bg-slate-100"
+                                  onClick={() =>
+                                    router.push(
+                                      `/investors?q=${encodeURIComponent(
+                                        m.investor.name
+                                      )}`
+                                    )
+                                  }
+                                >
+                                  Open investor →
+                                </button>
+                              </div>
                             </div>
                           ))
                         )}
