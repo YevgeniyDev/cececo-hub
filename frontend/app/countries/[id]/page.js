@@ -38,6 +38,8 @@ async function getCountries() {
 async function getNews(countryId) {
   const params = new URLSearchParams();
   params.set("country_id", String(countryId));
+  params.set("limit", "20");
+  params.set("offset", "0");
   const res = await fetch(`${API_BASE}/api/v1/news?${params.toString()}`, {
     cache: "no-store",
   });
@@ -71,7 +73,8 @@ export default async function CountryBriefingPage({ params }) {
       ? countries.find((c) => c.id === nextId)?.name ?? "Next"
       : null;
 
-  const topNews = (news || []).slice(0, 6);
+  const newsItems = news?.items || news || [];
+  const topNews = newsItems.slice(0, 6);
 
   return (
     <div className="space-y-6">
