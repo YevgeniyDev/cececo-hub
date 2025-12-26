@@ -235,46 +235,8 @@ def seed_initial_data() -> None:
         if changed_notes:
             db.commit()
 
-        # --- News feed seed (approved) ---
-        if db.query(NewsItem).count() == 0:
-            now = datetime.now(timezone.utc)
-            items = [
-                # (country_iso2 or None, impact_type, title, summary, tags, source_name, source_url, days_ago)
-                (None, "achievement", "CECECO region highlights: Clean energy momentum", "Round-up of notable clean energy announcements across member states (curated MVP news).", "cec eco,regional,clean energy", "CECECO (MVP)", None, 2),
-
-                ("TR", "policy", "Climate Change Adaptation Strategy and Action Plan (2024-2030)", "Climate change is one of the biggest environmental threats we face in today's world. This universal problem negatively affects not only individuals and countries, but also our common home, the world, and poses a serious risk to the sustainability of our planet. Current studies show that the global temperature increase has reached 1.1 °C compared to the pre-industrial era, and annual global greenhouse gas emissions have reached 59 billion tons of CO2 equivalent. At this critical juncture, we have the responsibility to take a firm stance towards reducing greenhouse gas emissions that cause climate change. In order to effectively combat climate change, it is necessary to accelerate efforts towards the goal of limiting the global temperature increase to 1.5 °C, as set out in the Paris Agreement. In this context, our country became a party to the Paris Agreement in 2021 and announced its Net Zero Emissions target for 2053. Following these developments, in 2015, Turkey updated its Intended National Contribution (NDC) submitted to the United Nations and increased its emission reduction target from 21% to 41% according to the reference scenario. These developments have demonstrated our country's commitment to combating climate change. Taking into account the 2053 Net Zero Emissions Target, the 12th Development Plan, the Medium-Term Program, and the NDC, it has been decided to prepare a new climate change strategy and action plan to determine Turkey's climate change mitigation targets for the coming period and to design the activities to be carried out within this scope. In this context, the Climate Change Mitigation Strategy and Action Plan 2024-2030 has been prepared with the contributions of all relevant stakeholders under the coordination of our Climate Change Presidency. This document outlines the process for combating climate change until 2030.", "strategy, action plan, climate change", "Republic of Türkiye Ministry of Environment, Urbanization and Climate Change, Directorate of Climate Change", "https://iklim.gov.tr/db/turkce/icerikler/files/%C4%B0klim%20De%C4%9Fi%C5%9Fikli%C4%9Fi%20Azalt%C4%B1m%20Stratejisi%20ve%20Eylem%20Plan%C4%B1%20(2024-2030).pdf", 7),
-                ("KZ", "regulation", "Kazakhstan advances grid flexibility pilots", "Regulatory progress supporting demand response and flexibility services (curated MVP news).", "grid flexibility,market rule", "Gov/MVP", None, 10),
-                ("PK", "regulation", "Pakistan strengthens distributed solar implementation", "Implementation update supporting distributed generation and reduction of losses (curated MVP news).", "net metering,distributed solar", "Regulator/MVP", None, 5),
-                ("UZ", "policy", "Uzbekistan accelerates utility-scale renewables pipeline", "Pipeline signal improving clarity for developers and investors (curated MVP news).", "auction,tender,solar", "Gov/MVP", None, 12),
-                ("AZ", "policy", "Azerbaijan signals progress on standard contracts", "Steps toward bankable PPAs to reduce friction for private investment (curated MVP news).", "ppa,contracts", "Gov/MVP", None, 9),
-                ("KG", "project", "Kyrgyzstan pilots small hydro modernization package", "Project-level milestone demonstrating near-term upgrade opportunities (curated MVP news).", "hydro,modernization", "Utility/MVP", None, 14),
-            ]
-
-            for iso2, impact_type, title, summary, tags, src_name, src_url, days_ago in items:
-                country_id = None
-                if iso2:
-                    c = iso2_to_country.get(iso2)
-                    if c:
-                        country_id = c.id
-
-                score = 10  # default; will be overwritten using simple scoring if you want
-                # keep it simple: reuse the service logic later if needed
-
-                db.add(
-                    NewsItem(
-                        country_id=country_id,
-                        status="approved",
-                        impact_type=impact_type,
-                        impact_score=score,
-                        title=title,
-                        summary=summary,
-                        tags=tags,
-                        source_name=src_name,
-                        source_url=src_url,
-                        published_at=now - timedelta(days=int(days_ago)),
-                    )
-                )
-            db.commit()
+        # --- News feed seed removed ---
+        # News is now fetched from GDELT API via the ingestion endpoint
 
         # --- Research library seed (approved examples) ---
         if db.query(Resource).count() == 0:

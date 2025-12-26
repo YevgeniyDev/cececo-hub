@@ -87,7 +87,6 @@ async def fetch_gdelt_news(
     search_query: str | None = None,
     max_records: int = 50,
     timespan: str = "7d",  # last 7 days
-    english_only: bool = False,  # Set to False to get more articles
 ) -> list[dict[str, Any]]:
     """
     Fetch news articles from GDELT API.
@@ -103,11 +102,8 @@ async def fetch_gdelt_news(
         "maxrecords": min(max_records, 250),  # GDELT max is 250
         "timespan": timespan,
         "sort": "hybridrel",  # Better source quality
+        "sourcelang": "english",  # Filter to English sources
     }
-    
-    # Only add language filter if explicitly requested (default False for more articles)
-    if english_only:
-        params["sourcelang"] = "english"
     
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:

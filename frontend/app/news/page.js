@@ -18,6 +18,8 @@ async function getNews({ countryId, q }) {
   const params = new URLSearchParams();
   if (countryId) params.set("country_id", countryId);
   if (q) params.set("q", q);
+  params.set("limit", "20");
+  params.set("offset", "0");
 
   const res = await fetch(`${API_BASE}/api/v1/news?${params.toString()}`, {
     cache: "no-store",

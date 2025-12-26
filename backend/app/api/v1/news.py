@@ -15,20 +15,30 @@ from app.services.country_matching import match_country_from_gdelt
 router = APIRouter(prefix="/news", tags=["news"])
 
 
-@router.get("", response_model=list[NewsItemOut])
+@router.get("")
 def list_news(
     country_id: str | int | None = None,
     q: str | None = None,
-    limit: int = 200,
+    limit: int = 20,
+    offset: int = 0,
     db: Session = Depends(get_db),
 ):
     """
-    Fetch news from database.
+    Fetch news from database with pagination.
     
     country_id can be:
     - None/empty: All countries (including global)
     - "cececo": Only CECECO countries (exclude global)
     - int: Specific country ID
+    
+    Returns:
+    {
+        "items": [...],
+        "total": int,
+        "limit": int,
+        "offset": int,
+        "has_more": bool
+    }
     """
     # Get all countries for name/ISO2 lookup and filtering
     all_countries = db.query(Country).all()
@@ -59,8 +69,11 @@ def list_news(
             )
         )
     
-    # Execute query and enrich with country info
-    items = query.order_by(NewsItem.published_at.desc()).limit(limit).all()
+    # Get total count before pagination
+    total = query.count()
+    
+    # Execute query with pagination and enrich with country info
+    items = query.order_by(NewsItem.published_at.desc()).offset(offset).limit(limit).all()
     
     # Convert to NewsItemOut format with country info
     result = []
@@ -84,77 +97,116 @@ def list_news(
             created_at=item.created_at,
         ))
     
-    return result
+    return {
+        "items": result,
+        "total": total,
+        "limit": limit,
+        "offset": offset,
+        "has_more": offset + limit < total,
+    }
 
 
 @router.post("/ingest/gdelt", dependencies=[Depends(require_admin)])
 async def ingest_gdelt_news(
-    max_records: int = 500,
-    timespan: str = "30d",
+    max_records: int = 5000,
+    per_country: int = 500,
+    global_limit: int = 2000,
+    timespan: str = "7d",
     auto_approve: bool = False,
     db: Session = Depends(get_db),
 ):
     """
     Ingest news from GDELT API and store in database.
+    No limit on how much can be preloaded - all fetched articles are stored.
     Returns count of inserted and skipped articles.
     
-    Defaults:
-    - max_records: 500 (increased from 200)
-    - timespan: 30d (increased from 7d for more articles)
+    Args:
+        max_records: Legacy parameter (now uses per_country * num_countries + global_limit)
+        per_country: Number of articles to fetch per country (default: 500)
+        global_limit: Number of global articles to fetch (default: 2000)
+        timespan: Time range for news (default: "7d")
+        auto_approve: If True, news items are created with status="approved" (default: False)
     """
     all_countries = db.query(Country).all()
+    iso2_to_country = {c.iso2.upper(): c for c in all_countries}
     
     # Fetch from all CECECO countries in parallel
     import asyncio
     
-    # Increase per-country limit for better coverage
-    per_country_limit = max(50, max_records // max(len(all_countries), 1))
-    tasks = [
-        fetch_gdelt_news(
+    # Track which country each fetch is for
+    country_tasks = [
+        (country, fetch_gdelt_news(
             country_iso2=country.iso2,
             search_query=None,
-            max_records=per_country_limit,
+            max_records=per_country,
             timespan=timespan,
-            english_only=False,  # Get more articles by including all languages
-        )
+        ))
         for country in all_countries
     ]
     
-    # Also fetch global articles (no country filter) - increased limit
-    tasks.append(
-        fetch_gdelt_news(
-            country_iso2=None,
-            search_query=None,
-            max_records=max_records // 2,
-            timespan=timespan,
-            english_only=False,  # Get more articles
-        )
-    )
+    # Also fetch global articles (no country filter)
+    global_task = (None, fetch_gdelt_news(
+        country_iso2=None,
+        search_query=None,
+        max_records=global_limit,
+        timespan=timespan,
+    ))
     
-    results = await asyncio.gather(*tasks, return_exceptions=True)
+    # Execute all tasks
+    all_tasks = [task for _, task in country_tasks] + [global_task[1]]
+    results = await asyncio.gather(*all_tasks, return_exceptions=True)
     
-    # Combine and deduplicate by URL
-    gdelt_articles = []
+    # Combine articles with their country context
+    gdelt_articles_with_context = []
     seen_urls = set()
-    for result in results:
+    
+    # Process country-specific results
+    for i, (country, _) in enumerate(country_tasks):
+        result = results[i]
         if isinstance(result, Exception):
             continue
         for article in result:
             url = article.get("url") or article.get("url_mobile")
             if url and url not in seen_urls:
                 seen_urls.add(url)
-                gdelt_articles.append(article)
+                # Tag article with the country we fetched for
+                gdelt_articles_with_context.append((article, country))
+    
+    # Process global results
+    global_result = results[len(country_tasks)]
+    if not isinstance(global_result, Exception):
+        for article in global_result:
+            url = article.get("url") or article.get("url_mobile")
+            if url and url not in seen_urls:
+                seen_urls.add(url)
+                gdelt_articles_with_context.append((article, None))
     
     # Map and insert articles
     inserted = 0
     skipped = 0
     
-    for article in gdelt_articles:
+    for article, fetch_country in gdelt_articles_with_context:
         try:
-            # Match country
-            country_id, country_name, country_iso2 = match_country_from_gdelt(
-                article, all_countries
-            )
+            # Match country - if we fetched with a country filter, prioritize that country
+            if fetch_country:
+                # When we fetch with sourcecountry filter, articles should be from that country
+                # Try matching first to see if GDELT confirms it
+                matched_id, matched_name, matched_iso2 = match_country_from_gdelt(
+                    article, all_countries
+                )
+                # If match confirms the fetch country, use it; otherwise use fetch country as fallback
+                if matched_id == fetch_country.id:
+                    country_id, country_name, country_iso2 = matched_id, matched_name, matched_iso2
+                else:
+                    # Use the country we filtered for (most reliable)
+                    country_id = fetch_country.id
+                    country_name = fetch_country.name
+                    country_iso2 = fetch_country.iso2
+            else:
+                # For global articles, try to match from content
+                country_id, country_name, country_iso2 = match_country_from_gdelt(
+                    article, all_countries
+                )
             
             # Map to news item format
             mapped = map_gdelt_to_news_item(
@@ -204,7 +256,7 @@ async def ingest_gdelt_news(
     return {
         "inserted": inserted,
         "skipped": skipped,
-        "total_fetched": len(gdelt_articles),
+        "total_fetched": len(gdelt_articles_with_context),
     }
 
 
