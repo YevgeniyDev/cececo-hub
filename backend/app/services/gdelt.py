@@ -184,6 +184,9 @@ def map_gdelt_to_news_item(
         or (gdelt_article.get("urlextras") or {}).get("url")
     )
     
+    # Extract image URL (social sharing image)
+    image_url = gdelt_article.get("socialimage") or gdelt_article.get("image")
+    
     # Extract summary - GDELT ArtList doesn't provide full article text
     # Try to get snippet or use title as summary
     summary = gdelt_article.get("snippet") or gdelt_article.get("summary") or title
@@ -283,6 +286,7 @@ def map_gdelt_to_news_item(
         "tags": tags[:400] if tags else None,  # Match DB constraint
         "source_name": source_name[:120] if source_name else None,
         "source_url": url[:600] if url else None,  # Match DB constraint
+        "image_url": image_url[:600] if image_url else None,  # Image URL
         "published_at": published_at,
     }
 

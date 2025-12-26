@@ -18,6 +18,7 @@ class NewsItemOut(BaseModel):
     tags: str | None = None
     source_name: str | None = None
     source_url: str | None = None
+    image_url: str | None = None
 
     published_at: datetime
     created_at: datetime

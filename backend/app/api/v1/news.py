@@ -273,6 +273,7 @@ async def list_news(
                     "tags": mapped["tags"],
                     "source_name": mapped["source_name"],
                     "source_url": mapped["source_url"],
+                    "image_url": mapped.get("image_url"),  # Add image URL
                     "published_at": mapped["published_at"],
                     "created_at": mapped["published_at"],  # Use published_at as created_at
                 })
