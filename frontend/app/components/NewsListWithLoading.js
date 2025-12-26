@@ -5,7 +5,11 @@ import { useSearchParams } from "next/navigation";
 import NewsListClient from "./NewsListClient";
 import NewsLoading from "./NewsLoading";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
+const API_BASE = (
+  process.env.API_INTERNAL_BASE ||
+  process.env.NEXT_PUBLIC_API_BASE ||
+  "http://localhost:8000"
+).replace(/\/+$/, "");
 
 export default function NewsListWithLoading({ initialNews }) {
   const searchParams = useSearchParams();

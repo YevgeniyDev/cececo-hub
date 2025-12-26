@@ -43,9 +43,7 @@ def build_gdelt_query(
     query_parts = []
     
     # Base clean energy keywords - simplify to use fewer, more common terms
-    # GDELT works better with simpler queries
     if clean_energy_keywords:
-        # Use a simpler OR query with the most common terms
         clean_energy_terms = [
             '"renewable energy"',
             '"solar energy"',
@@ -57,18 +55,27 @@ def build_gdelt_query(
         or_query = f"({' OR '.join(clean_energy_terms)})"
         query_parts.append(or_query)
     
+    # Exclude noise terms
+    exclude_terms = [
+        "horoscope",
+        "recipe",
+        "christmas",
+        "fengshui",
+        "astrology",
+        "cooking",
+    ]
+    exclude_query = " ".join([f"-{term}" for term in exclude_terms])
+    query_parts.append(exclude_query)
+    
     # Add user search query if provided
     if search_query and search_query.strip():
         user_query = search_query.strip()
-        # If user query contains spaces and isn't already quoted, wrap in quotes
         if " " in user_query and not (user_query.startswith('"') and user_query.endswith('"')):
             user_query = f'"{user_query}"'
         query_parts.append(user_query)
     
     # Add country filter if provided
     if country_iso2:
-        # GDELT uses sourcecountry with country name (no spaces) or ISO2
-        # We'll use ISO2 which should work
         query_parts.append(f"sourcecountry:{country_iso2.upper()}")
     
     final_query = " ".join(query_parts)
@@ -80,6 +87,7 @@ async def fetch_gdelt_news(
     search_query: str | None = None,
     max_records: int = 50,
     timespan: str = "7d",  # last 7 days
+    english_only: bool = False,  # Set to False to get more articles
 ) -> list[dict[str, Any]]:
     """
     Fetch news articles from GDELT API.
@@ -88,64 +96,42 @@ async def fetch_gdelt_news(
     """
     query = build_gdelt_query(country_iso2, search_query)
     
-    # Debug: print the query being sent
-    print(f"[GDELT] Query: {query}")
-    
     params = {
         "query": query,
         "mode": "artlist",
         "format": "json",
         "maxrecords": min(max_records, 250),  # GDELT max is 250
         "timespan": timespan,
-        "sort": "datedesc",
+        "sort": "hybridrel",  # Better source quality
     }
     
-    # Debug: print the full URL
-    full_url = f"{GDELT_BASE_URL}?query={query}&mode=artlist&format=json&maxrecords={params['maxrecords']}&timespan={timespan}&sort=datedesc"
-    print(f"[GDELT] Request URL: {full_url[:200]}...")
+    # Only add language filter if explicitly requested (default False for more articles)
+    if english_only:
+        params["sourcelang"] = "english"
     
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.get(GDELT_BASE_URL, params=params)
-            print(f"[GDELT] Response status: {response.status_code}")
-            
             response.raise_for_status()
             
-            # Try to parse JSON
             try:
                 data = response.json()
-                print(f"[GDELT] Response type: {type(data)}")
-                if isinstance(data, dict):
-                    print(f"[GDELT] Response keys: {list(data.keys())}")
-                elif isinstance(data, list):
-                    print(f"[GDELT] Response list length: {len(data)}")
-            except Exception as json_err:
-                print(f"[GDELT] JSON parse error: {json_err}")
-                print(f"[GDELT] Response text (first 500 chars): {response.text[:500]}")
+            except Exception:
                 return []
             
             # GDELT JSON format: can be a list directly or have "articles" field
             articles = []
             if isinstance(data, list):
                 articles = data
-                print(f"[GDELT] Found {len(articles)} articles (direct list)")
             elif isinstance(data, dict):
                 articles = data.get("articles", [])
                 if not articles and "results" in data:
                     articles = data.get("results", [])
                 if not articles and "data" in data:
                     articles = data.get("data", [])
-                print(f"[GDELT] Found {len(articles)} articles (from dict)")
-            else:
-                print(f"[GDELT] Unexpected response format: {type(data)}")
             
             return articles
-    except httpx.HTTPStatusError as e:
-        # Log error but return empty list to avoid breaking the app
-        print(f"[GDELT] HTTP error: {e}")
-        if e.response is not None:
-            print(f"[GDELT] Response status: {e.response.status_code}")
-            print(f"[GDELT] Response text: {e.response.text[:500]}")
+    except httpx.HTTPStatusError:
         return []
     except httpx.RequestError as e:
         print(f"[GDELT] Request error: {e}")
@@ -233,9 +219,8 @@ def map_gdelt_to_news_item(
                 published_at = datetime(
                     year, month, day, hour, minute, second, tzinfo=timezone.utc
                 )
-        except (ValueError, IndexError) as e:
+        except (ValueError, IndexError):
             # If parsing fails, use current time
-            print(f"[GDELT] Date parse error for '{date_str}': {e}")
             pass
     
     # Infer impact type
@@ -278,7 +263,7 @@ def map_gdelt_to_news_item(
         "country_id": country_id,
         "country_name": country_name,
         "country_iso2": country_iso2,
-        "status": "approved",  # GDELT articles are pre-filtered
+        "status": "pending",  # Default to pending for moderation
         "impact_type": impact_type,
         "impact_score": impact_score,
         "title": title[:220],  # Truncate to match DB constraint
