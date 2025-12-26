@@ -48,6 +48,7 @@ export default function NewsFiltersClient({ countries }) {
         onChange={(e) => setCountryId(e.target.value)}
       >
         <option value="">All countries (global)</option>
+        <option value="cececo">CECECO countries</option>
         {countries.map((c) => (
           <option key={c.id} value={String(c.id)}>
             {c.name} ({c.iso2})

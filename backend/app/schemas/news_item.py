@@ -5,6 +5,8 @@ from pydantic import BaseModel
 class NewsItemOut(BaseModel):
     id: int
     country_id: int | None = None
+    country_name: str | None = None
+    country_iso2: str | None = None
     status: str
 
     impact_type: str

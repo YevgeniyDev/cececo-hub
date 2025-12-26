@@ -1,4 +1,5 @@
 import NewsFiltersClient from "../components/NewsFiltersClient";
+import NewsListWithLoading from "../components/NewsListWithLoading";
 
 const API_BASE =
   process.env.API_INTERNAL_BASE ||
@@ -48,49 +49,7 @@ export default async function NewsPage({ searchParams }) {
         <NewsFiltersClient countries={countries} />
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        {news.map((n) => (
-          <article
-            key={n.id}
-            className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md"
-          >
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <h3 className="text-base font-bold leading-snug">{n.title}</h3>
-                <div className="mt-1 text-xs text-slate-500">
-                  <span className="font-semibold text-slate-700">
-                    {n.impact_type}
-                  </span>{" "}
-                  • Score <span className="font-mono">{n.impact_score}</span>
-                </div>
-              </div>
-
-              <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-semibold text-slate-600">
-                approved
-              </span>
-            </div>
-
-            <p className="mt-3 text-sm leading-6 text-slate-700">{n.summary}</p>
-
-            <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
-              <div>
-                Published: {new Date(n.published_at).toLocaleDateString()}
-              </div>
-
-              {n.source_url ? (
-                <a
-                  className="font-semibold text-slate-800 underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500"
-                  href={n.source_url}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Source →
-                </a>
-              ) : null}
-            </div>
-          </article>
-        ))}
-      </div>
+      <NewsListWithLoading initialNews={news} />
     </div>
   );
 }
