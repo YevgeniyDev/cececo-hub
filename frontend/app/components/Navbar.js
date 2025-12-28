@@ -19,66 +19,42 @@ export default function Navbar() {
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/80 backdrop-blur">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
-        {/* Brand */}
-        <div className="flex items-center gap-3">
-          <a
-            href="/"
-            className="flex items-center gap-2 rounded-xl px-2 py-1 hover:bg-slate-100"
+    <div className="relative flex items-center gap-2">
+      {/* Desktop nav */}
+      <nav className="hidden items-center gap-1 sm:flex">
+        {links.map((l) => (
+          <NavLink
+            key={l.href}
+            href={l.href}
+            className="rounded-full px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+            activeClassName="bg-slate-900 text-white hover:bg-slate-900"
           >
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-900 text-sm font-extrabold text-white">
-              C
-            </div>
-            <div className="leading-tight">
-              <div className="text-sm font-extrabold text-slate-900">
-                CECECO Hub
-              </div>
-              <div className="text-[11px] font-medium text-slate-500">
-                Clean energy intelligence
-              </div>
-            </div>
-          </a>
-        </div>
+            {l.label}
+          </NavLink>
+        ))}
+      </nav>
 
-        {/* Desktop nav */}
-        <nav className="hidden items-center gap-1 sm:flex">
-          {links.map((l) => (
-            <NavLink
-              key={l.href}
-              href={l.href}
-              className="rounded-full px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
-              activeClassName="bg-slate-900 text-white hover:bg-slate-900"
-            >
-              {l.label}
-            </NavLink>
-          ))}
-        </nav>
+      {/* Right action (desktop) */}
+      <a
+        href="/countries"
+        className="hidden items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 sm:inline-flex"
+      >
+        Explore →
+      </a>
 
-        {/* Right actions (desktop) */}
-        <div className="hidden items-center gap-2 sm:flex">
-          <a
-            href="/countries"
-            className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-800"
-          >
-            Explore →
-          </a>
-        </div>
-
-        {/* Mobile menu button */}
-        <button
-          className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50 sm:hidden"
-          onClick={() => setOpen((v) => !v)}
-          aria-label="Toggle menu"
-          aria-expanded={open}
-        >
-          {open ? "Close" : "Menu"}
-        </button>
-      </div>
+      {/* Mobile menu button */}
+      <button
+        className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50 sm:hidden"
+        onClick={() => setOpen((v) => !v)}
+        aria-label="Toggle menu"
+        aria-expanded={open}
+      >
+        {open ? "Close" : "Menu"}
+      </button>
 
       {/* Mobile dropdown */}
       {open && (
-        <div className="border-t border-slate-200 bg-white shadow-lg sm:hidden">
+        <div className="absolute right-0 top-12 w-60 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg sm:hidden">
           <div className="space-y-1 p-3">
             {links.map((l) => (
               <NavLink
@@ -104,6 +80,6 @@ export default function Navbar() {
           </div>
         </div>
       )}
-    </header>
+    </div>
   );
 }

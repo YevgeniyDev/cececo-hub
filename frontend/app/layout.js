@@ -8,18 +8,32 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body className="min-h-screen bg-gradient-to-b from-slate-50 to-white text-slate-900">
         {/* Topbar */}
-        <header className="sticky top-0 z-50 border-b border-slate-200/70 bg-white/70 backdrop-blur">
-          <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
-            <div className="flex items-baseline gap-2">
-              <span className="text-sm font-extrabold tracking-tight sm:text-base">
-                CECECO Hub
+        <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/80 backdrop-blur">
+          <div className="mx-auto flex h-16 max-w-6xl items-center gap-4 px-4">
+            {/* Brand (LEFT) */}
+            <a href="/" className="flex items-center gap-3">
+              <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-900 text-sm font-extrabold text-white">
+                C
               </span>
-              <span className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[11px] font-semibold text-slate-500">
+
+              <div className="leading-tight">
+                <div className="text-sm font-extrabold text-slate-900">
+                  CECECO Hub
+                </div>
+                <div className="text-xs font-semibold text-slate-500">
+                  Clean energy intelligence
+                </div>
+              </div>
+
+              <span className="ml-2 rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-bold text-slate-600">
                 MVP
               </span>
-            </div>
+            </a>
 
-            <Navbar />
+            {/* Nav (RIGHT) */}
+            <div className="ml-auto">
+              <Navbar />
+            </div>
           </div>
         </header>
 
