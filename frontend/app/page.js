@@ -181,7 +181,6 @@ export default function Home() {
             <p className="mt-2 max-w-3xl text-sm text-slate-600">
               This platform is designed to be useful to policymakers, startups,
               investors, and youth teams — not just a directory.
-              :contentReference[oaicite:1]{(index = 1)}
             </p>
           </div>
 
@@ -245,17 +244,16 @@ export default function Home() {
         </div>
       </section>
 
-      {/* HOW IT WORKS (tight + demo-first) */}
+      {/* HOW IT WORKS */}
       <section className="rounded-3xl border border-slate-200 bg-white p-7 shadow-sm md:p-10">
         <div>
           <h2 className="text-2xl font-extrabold tracking-tight text-slate-950">
             Built for the exact “portal + matching” requirement
           </h2>
           <p className="mt-2 max-w-2xl text-sm text-slate-600">
-            The hackathon explicitly calls for digital platforms connecting
-            clean-energy startups with investors, and knowledge hubs showing
-            potential, action plans, and regulatory frameworks.
-            :contentReference[oaicite:2]{(index = 2)}
+            A platform connecting clean-energy startups with investors, and a
+            knowledge hub showing potential, action plans, and regulatory
+            frameworks — built as a working product, not a slide deck.
           </p>
         </div>
 
@@ -307,7 +305,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* USE CASES (kept, but sharpened for jury) */}
+      {/* USE CASES */}
       <section className="grid gap-4 lg:grid-cols-3">
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="text-xs font-extrabold uppercase tracking-wide text-slate-500">
@@ -393,7 +391,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* FAQ (keep it, but make it “jury safe”) */}
+      {/* FAQ */}
       <section className="rounded-3xl border border-slate-200 bg-white p-7 shadow-sm md:p-10">
         <h2 className="text-2xl font-extrabold tracking-tight text-slate-950">
           FAQs
