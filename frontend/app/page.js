@@ -30,6 +30,9 @@ export default function Home() {
               Projects, startups, investors
             </span>
             <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700">
+              Add your own entries
+            </span>
+            <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700">
               Live updates (GDELT)
             </span>
           </div>
@@ -128,7 +131,8 @@ export default function Home() {
                     Projects & ecosystem
                   </div>
                   <div className="mt-1 text-sm text-slate-600">
-                    Filterable lists built for real evaluation workflows.
+                    Filterable lists built for real evaluation workflows. Add
+                    your own projects, startups, or investors.
                   </div>
                 </div>
 
@@ -278,6 +282,7 @@ export default function Home() {
             </div>
             <p className="mt-3 text-sm leading-6 text-slate-600">
               Browse projects, startups, and investors with intuitive filters.
+              Use the "+ Add" buttons to contribute your own entries.
             </p>
           </div>
 
@@ -323,6 +328,7 @@ export default function Home() {
           </div>
           <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-6 text-slate-600">
             <li>Discover investors by sector, stage, and geography</li>
+            <li>Add your startup or project to the directory</li>
             <li>Use match reasons to guide outreach</li>
             <li>Understand country context for market entry</li>
           </ul>
@@ -337,6 +343,7 @@ export default function Home() {
           </div>
           <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-6 text-slate-600">
             <li>Shortlist projects and startups with filters</li>
+            <li>Add your fund or investment program to the directory</li>
             <li>Review geo-policy context before outreach</li>
             <li>Use live news as diligence prompts</li>
           </ul>
@@ -357,7 +364,8 @@ export default function Home() {
             </h2>
             <p className="mt-2 max-w-2xl text-sm text-white/80">
               Countries, projects, investors, and live updates — built for fast
-              decisions and clear demos.
+              decisions and clear demos. Contribute your own entries to grow the
+              ecosystem.
             </p>
           </div>
 
@@ -408,6 +416,17 @@ export default function Home() {
             <p className="mt-2 text-sm leading-6 text-slate-600">
               Matches are scored 0–100 using country fit, sector alignment, and
               stage fit — each shown with reasons and a breakdown.
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+            <div className="text-sm font-bold text-slate-900">
+              Can I add my own projects or investors?
+            </div>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              Yes! Use the "+ Add" buttons on the Projects, Startups, and
+              Investors pages to submit new entries. All submissions are
+              immediately available in the directory.
             </p>
           </div>
 
