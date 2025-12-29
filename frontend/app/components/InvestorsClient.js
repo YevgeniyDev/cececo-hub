@@ -77,7 +77,6 @@ export default function InvestorsClient({
   const urlCountryId = searchParams.get("country_id") || "";
 
   const [items, setItems] = useState([]);
-  const [allItems, setAllItems] = useState([]); // Store all items for filtering
   const [q, setQ] = useState(urlQ);
   const [investorType, setInvestorType] = useState(urlType);
   const [loading, setLoading] = useState(true);
@@ -85,8 +84,6 @@ export default function InvestorsClient({
   const [countries, setCountries] = useState([]);
   const [countryId, setCountryId] = useState(urlCountryId);
   const [showForm, setShowForm] = useState(false);
-  const [selectedSectors, setSelectedSectors] = useState([]);
-  const [selectedStages, setSelectedStages] = useState([]);
 
   // keep local state in sync when user navigates via links
   useEffect(() => {
@@ -132,85 +129,13 @@ export default function InvestorsClient({
         fetchJSON(`${API_BASE}/api/v1/investors?${params}`),
       ]);
       setCountries(cList);
-      setAllItems(data);
-      // Apply client-side filters
-      applyFilters(data);
+      setItems(data);
     } catch (e) {
       setErr(e?.message || "Failed to load investors");
     } finally {
       setLoading(false);
     }
   }
-
-  // Extract unique sectors and stages from all items
-  const availableSectors = useMemo(() => {
-    const sectors = new Set();
-    allItems.forEach((inv) => {
-      if (inv.focus_sectors) {
-        inv.focus_sectors
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean)
-          .forEach((s) => sectors.add(s));
-      }
-    });
-    return Array.from(sectors).sort();
-  }, [allItems]);
-
-  const availableStages = useMemo(() => {
-    const stages = new Set();
-    allItems.forEach((inv) => {
-      if (inv.stages) {
-        inv.stages
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean)
-          .forEach((s) => stages.add(s));
-      }
-    });
-    return Array.from(stages).sort();
-  }, [allItems]);
-
-  // Apply client-side filters for sectors and stages
-  function applyFilters(data) {
-    let filtered = [...data];
-
-    // Filter by sectors
-    if (selectedSectors.length > 0) {
-      filtered = filtered.filter((inv) => {
-        if (!inv.focus_sectors) return false;
-        const invSectors = inv.focus_sectors
-          .split(",")
-          .map((s) => s.trim().toLowerCase());
-        return selectedSectors.some((sel) =>
-          invSectors.includes(sel.toLowerCase())
-        );
-      });
-    }
-
-    // Filter by stages
-    if (selectedStages.length > 0) {
-      filtered = filtered.filter((inv) => {
-        if (!inv.stages) return false;
-        const invStages = inv.stages
-          .split(",")
-          .map((s) => s.trim().toLowerCase());
-        return selectedStages.some((sel) =>
-          invStages.includes(sel.toLowerCase())
-        );
-      });
-    }
-
-    setItems(filtered);
-  }
-
-  // Update filters when selections change
-  useEffect(() => {
-    if (allItems.length > 0) {
-      applyFilters(allItems);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedSectors, selectedStages, allItems]);
 
   useEffect(() => {
     load();
@@ -226,18 +151,8 @@ export default function InvestorsClient({
           {subtitle ? (
             <p className="mt-2 max-w-3xl text-sm text-slate-600">{subtitle}</p>
           ) : null}
-          <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-500">
-            <span>
-              API: <span className="font-mono">{API_BASE}</span>
-            </span>
-            {!loading && allItems.length > 0 && (
-              <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 font-semibold text-slate-700">
-                {allItems.length}{" "}
-                {allItems.length === 1 ? "investor" : "investors"}
-                {items.length !== allItems.length &&
-                  ` (${items.length} filtered)`}
-              </span>
-            )}
+          <div className="mt-2 text-xs text-slate-500">
+            API: <span className="font-mono">{API_BASE}</span>
           </div>
         </div>
 
@@ -296,104 +211,6 @@ export default function InvestorsClient({
         </div>
       </div>
 
-      {/* Sector and Stage Filters */}
-      {(availableSectors.length > 0 || availableStages.length > 0) && (
-        <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="grid gap-4 md:grid-cols-2">
-            {/* Sectors Filter */}
-            {availableSectors.length > 0 && (
-              <div>
-                <div className="mb-2 text-xs font-extrabold uppercase tracking-wide text-slate-500">
-                  Filter by Sectors
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {availableSectors.map((sector) => {
-                    const isSelected = selectedSectors.includes(sector);
-                    return (
-                      <button
-                        key={sector}
-                        type="button"
-                        onClick={() => {
-                          setSelectedSectors((prev) =>
-                            isSelected
-                              ? prev.filter((s) => s !== sector)
-                              : [...prev, sector]
-                          );
-                        }}
-                        className={`rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${
-                          isSelected
-                            ? "border-slate-900 bg-slate-900 text-white"
-                            : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                        }`}
-                      >
-                        {sector}
-                      </button>
-                    );
-                  })}
-                  {selectedSectors.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => setSelectedSectors([])}
-                      className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                    >
-                      Clear all
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Stages Filter */}
-            {availableStages.length > 0 && (
-              <div>
-                <div className="mb-2 text-xs font-extrabold uppercase tracking-wide text-slate-500">
-                  Filter by Stages
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {availableStages.map((stage) => {
-                    const isSelected = selectedStages.includes(stage);
-                    return (
-                      <button
-                        key={stage}
-                        type="button"
-                        onClick={() => {
-                          setSelectedStages((prev) =>
-                            isSelected
-                              ? prev.filter((s) => s !== stage)
-                              : [...prev, stage]
-                          );
-                        }}
-                        className={`rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${
-                          isSelected
-                            ? "border-slate-900 bg-slate-900 text-white"
-                            : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                        }`}
-                      >
-                        {stage}
-                      </button>
-                    );
-                  })}
-                  {selectedStages.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => setSelectedStages([])}
-                      className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                    >
-                      Clear all
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-          {(selectedSectors.length > 0 || selectedStages.length > 0) && (
-            <div className="mt-3 text-xs text-slate-500">
-              Showing {items.length} of {allItems.length} investors
-            </div>
-          )}
-        </div>
-      )}
-
       {/* Add Form */}
       {showForm ? (
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -434,32 +251,6 @@ export default function InvestorsClient({
           <SkeletonCard />
           <SkeletonCard />
           <SkeletonCard />
-        </div>
-      ) : items.length === 0 ? (
-        <div className="rounded-3xl border border-slate-200 bg-slate-50 p-8 text-center">
-          <div className="text-sm font-semibold text-slate-700">
-            No investors found
-          </div>
-          <div className="mt-2 text-xs text-slate-500">
-            {selectedSectors.length > 0 ||
-            selectedStages.length > 0 ||
-            countryId ||
-            investorType ||
-            q.trim()
-              ? "Try adjusting your filters"
-              : "Seed data should load automatically. If empty, check that the backend has seeded investors."}
-          </div>
-          {(selectedSectors.length > 0 || selectedStages.length > 0) && (
-            <button
-              onClick={() => {
-                setSelectedSectors([]);
-                setSelectedStages([]);
-              }}
-              className="mt-4 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50"
-            >
-              Clear filters
-            </button>
-          )}
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
