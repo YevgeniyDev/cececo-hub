@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.db.session import get_db
 from app.models.country import Country
@@ -85,7 +85,18 @@ def country_ranking(db: Session = Depends(get_db)):
 
 @router.get("/{country_id}", response_model=CountryDetailOut)
 def get_country(country_id: int, db: Session = Depends(get_db)):
-    country = db.query(Country).filter(Country.id == country_id).first()
+    country = (
+        db.query(Country)
+        .options(
+            selectinload(Country.indicators),
+            selectinload(Country.policies),
+            selectinload(Country.frameworks),
+            selectinload(Country.institutions),
+            selectinload(Country.targets),
+        )
+        .filter(Country.id == country_id)
+        .first()
+    )
     if not country:
         raise HTTPException(status_code=404, detail="Country not found")
     return country

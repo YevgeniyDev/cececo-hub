@@ -28,4 +28,5 @@ class Country(Base):
     frameworks = relationship("CountryFramework", back_populates="country", lazy="selectin", cascade="all, delete-orphan")
     indicators = relationship("CountryIndicator", back_populates="country", lazy="selectin", cascade="all, delete-orphan")
     news_items = relationship("NewsItem", back_populates="country", lazy="selectin")
-
+    institutions = relationship("CountryInstitution", back_populates="country", cascade="all, delete-orphan")
+    targets = relationship("CountryTarget", back_populates="country", cascade="all, delete-orphan")

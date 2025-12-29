@@ -8,6 +8,8 @@ from app.core.seed import seed_initial_data
 from app.models.country_policy import CountryPolicy  # noqa: F401
 from app.models.country_framework import CountryFramework  # noqa: F401
 from app.models.country_indicator import CountryIndicator  # noqa: F401
+from app.models.country_institution import CountryInstitution  # noqa: F401
+from app.models.country_target import CountryTarget  # noqa: F401
 from app.models.news_item import NewsItem  # noqa: F401
 from app.models.resource import Resource  # noqa: F401
 

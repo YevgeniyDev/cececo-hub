@@ -3,6 +3,8 @@ from pydantic import BaseModel, Field
 from app.schemas.country_policy import CountryPolicyOut
 from app.schemas.country_framework import CountryFrameworkOut
 from app.schemas.country_indicator import CountryIndicatorOut
+from app.schemas.country_institution import CountryInstitutionOut
+from app.schemas.country_target import CountryTargetOut
 
 
 class CountryOut(BaseModel):
@@ -23,6 +25,8 @@ class CountryDetailOut(CountryOut):
     indicators: list[CountryIndicatorOut] = Field(default_factory=list)
     policies: list[CountryPolicyOut] = Field(default_factory=list)
     frameworks: list[CountryFrameworkOut] = Field(default_factory=list)
+    institutions: list[CountryInstitutionOut] = Field(default_factory=list)
+    targets: list[CountryTargetOut] = Field(default_factory=list)
 
 
 class CountryIndicatorBreakdown(BaseModel):

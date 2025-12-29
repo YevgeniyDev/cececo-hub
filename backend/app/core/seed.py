@@ -9,6 +9,8 @@ from app.models.investor import Investor
 from app.models.country_policy import CountryPolicy
 from app.models.country_framework import CountryFramework
 from app.models.country_indicator import CountryIndicator
+from app.models.country_institution import CountryInstitution
+from app.models.country_target import CountryTarget
 
 from datetime import datetime, timezone, timedelta
 from app.models.news_item import NewsItem
@@ -179,6 +181,71 @@ def seed_initial_data() -> None:
                     description=desc,
                     why_it_matters=why,
                     source_url=None,
+                ))
+            db.commit()
+
+        # Institutions seed
+        if db.query(CountryInstitution).count() == 0:
+            INST = [
+                # (iso2, type, name, desc, website, email)
+                ("KZ", "ministry", "Ministry of Energy", "Energy policy, planning and oversight.", None, None),
+                ("KZ", "regulator", "Energy Regulation Authority", "Market rules and regulatory oversight.", None, None),
+                ("KZ", "tso", "National Grid Operator", "Transmission planning, grid access and operations.", None, None),
+                ("TR", "ministry", "Ministry of Energy and Natural Resources", "Energy strategy and national programs.", None, None),
+                ("TR", "regulator", "Energy Market Regulatory Authority (EMRA)", "Licensing and market regulation.", None, None),
+                ("TR", "tso", "TEİAŞ", "Transmission system operator.", None, None),
+                ("AZ", "ministry", "Ministry of Energy", "Energy policy and development strategy.", None, None),
+                ("AZ", "regulator", "Energy Regulatory Agency", "Market regulation and licensing.", None, None),
+                ("PK", "ministry", "Ministry of Energy", "National energy policy and planning.", None, None),
+                ("PK", "regulator", "National Electric Power Regulatory Authority (NEPRA)", "Power sector regulation and tariffs.", None, None),
+                ("PK", "tso", "National Transmission & Despatch Company", "Transmission system operations.", None, None),
+                ("UZ", "ministry", "Ministry of Energy", "Energy sector development and policy.", None, None),
+                ("UZ", "regulator", "Energy Regulatory Authority", "Market oversight and regulation.", None, None),
+                ("KG", "ministry", "Ministry of Energy", "Energy policy and sector development.", None, None),
+                ("KG", "regulator", "Energy Regulatory Commission", "Regulatory oversight and market rules.", None, None),
+            ]
+            for iso2, itype, name, desc, web, email in INST:
+                c = iso2_to_country.get(iso2)
+                if not c:
+                    continue
+                db.add(CountryInstitution(
+                    country_id=c.id,
+                    institution_type=itype,
+                    name=name,
+                    description=desc,
+                    website=web,
+                    contact_email=email
+                ))
+            db.commit()
+
+        # Targets seed
+        if db.query(CountryTarget).count() == 0:
+            TGT = [
+                # (iso2, year, type, title, value, unit, notes, source_url)
+                ("KZ", 2030, "renewables_share", "Renewables share target", "—", "%", "Add official target when confirmed.", None),
+                ("TR", 2030, "capacity_gw", "Renewables capacity target", "—", "GW", "Add official number + source.", None),
+                ("TR", 2030, "renewables_share", "Renewables share target", "—", "%", "Add official target when confirmed.", None),
+                ("PK", 2030, "renewables_share", "Clean energy share target", "—", "%", "Add official number + source.", None),
+                ("PK", 2030, "capacity_gw", "Renewables capacity target", "—", "GW", "Add official number + source.", None),
+                ("UZ", 2030, "renewables_share", "Renewables share target", "—", "%", "Add official target when confirmed.", None),
+                ("UZ", 2030, "capacity_gw", "Solar capacity target", "—", "GW", "Add official number + source.", None),
+                ("AZ", 2030, "renewables_share", "Renewables share target", "—", "%", "Add official target when confirmed.", None),
+                ("AZ", 2030, "capacity_gw", "Wind capacity target", "—", "GW", "Add official number + source.", None),
+                ("KG", 2030, "renewables_share", "Renewables share target", "—", "%", "Add official target when confirmed.", None),
+            ]
+            for iso2, year, ttype, title, value, unit, notes, src in TGT:
+                c = iso2_to_country.get(iso2)
+                if not c:
+                    continue
+                db.add(CountryTarget(
+                    country_id=c.id,
+                    year=year,
+                    target_type=ttype,
+                    title=title,
+                    value=value,
+                    unit=unit,
+                    notes=notes,
+                    source_url=src
                 ))
             db.commit()
 
