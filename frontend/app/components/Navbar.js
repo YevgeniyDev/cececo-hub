@@ -34,14 +34,6 @@ export default function Navbar() {
         ))}
       </nav>
 
-      {/* Right action (desktop) */}
-      <a
-        href="/countries"
-        className="hidden items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 sm:inline-flex"
-      >
-        Explore →
-      </a>
-
       {/* Mobile menu button */}
       <button
         className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50 sm:hidden"
@@ -67,16 +59,6 @@ export default function Navbar() {
                 {l.label}
               </NavLink>
             ))}
-
-            <div className="pt-2">
-              <a
-                href="/countries"
-                onClick={close}
-                className="flex w-full items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-slate-800"
-              >
-                Explore Countries →
-              </a>
-            </div>
           </div>
         </div>
       )}

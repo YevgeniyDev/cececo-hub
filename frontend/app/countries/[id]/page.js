@@ -1142,23 +1142,6 @@ export default async function CountryBriefingPage({ params }) {
               </div>
             </div>
           </div>
-
-          {/* Data transparency */}
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="text-xs font-extrabold uppercase tracking-wide text-slate-500">
-              Data notes
-            </div>
-            <div className="mt-2 text-sm text-slate-700">
-              The page gets dramatically stronger when policies/frameworks have
-              official sources and each country has enough real listings to make
-              patterns meaningful.
-            </div>
-            <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-slate-600">
-              <li>Add 10–20 real projects/startups per country</li>
-              <li>Add 1–2 official sources per policy/framework</li>
-              <li>Ensure consistent sector + stage tags across listings</li>
-            </ul>
-          </div>
         </aside>
       </section>
     </div>
