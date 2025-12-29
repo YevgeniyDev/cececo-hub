@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import InvestorForm from "./InvestorForm";
 
 const API_BASE = (
   process.env.API_INTERNAL_BASE ||
@@ -82,6 +83,7 @@ export default function InvestorsClient({
   const [err, setErr] = useState("");
   const [countries, setCountries] = useState([]);
   const [countryId, setCountryId] = useState(urlCountryId);
+  const [showForm, setShowForm] = useState(false);
 
   // keep local state in sync when user navigates via links
   useEffect(() => {
@@ -155,6 +157,12 @@ export default function InvestorsClient({
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => setShowForm(!showForm)}
+            className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50"
+          >
+            {showForm ? "Cancel" : "+ Add Investor"}
+          </button>
           <select
             className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-800 shadow-sm outline-none hover:bg-slate-50 focus:border-slate-400"
             value={investorType}
@@ -202,6 +210,21 @@ export default function InvestorsClient({
           </div>
         </div>
       </div>
+
+      {/* Add Form */}
+      {showForm ? (
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="mb-4 text-lg font-extrabold text-slate-900">Add New Investor</h2>
+          <InvestorForm
+            countries={countries}
+            onSuccess={(created) => {
+              setShowForm(false);
+              load(); // Reload the list
+            }}
+            onCancel={() => setShowForm(false)}
+          />
+        </div>
+      ) : null}
 
       {/* Error */}
       {err ? (

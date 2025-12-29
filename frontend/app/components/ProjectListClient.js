@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import ProjectForm from "./ProjectForm";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE ||
@@ -62,6 +63,7 @@ export default function ProjectListClient({
   const [q, setQ] = useState(urlQ);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
+  const [showForm, setShowForm] = useState(false);
 
   // Match widget state (per project id)
   const [matchById, setMatchById] = useState({});
@@ -270,6 +272,12 @@ export default function ProjectListClient({
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => setShowForm(!showForm)}
+            className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50"
+          >
+            {showForm ? "Cancel" : `+ Add ${defaultKind}`}
+          </button>
           <select
             className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-800 shadow-sm outline-none hover:bg-slate-50 focus:border-slate-400"
             value={countryId}
@@ -304,6 +312,24 @@ export default function ProjectListClient({
           </div>
         </div>
       </div>
+
+      {/* Add Form */}
+      {showForm ? (
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="mb-4 text-lg font-extrabold text-slate-900">
+            Add New {defaultKind === "startup" ? "Startup" : "Project"}
+          </h2>
+          <ProjectForm
+            kind={defaultKind}
+            countries={countries}
+            onSuccess={(created) => {
+              setShowForm(false);
+              load(); // Reload the list
+            }}
+            onCancel={() => setShowForm(false)}
+          />
+        </div>
+      ) : null}
 
       {/* Error */}
       {err ? (
@@ -476,15 +502,16 @@ export default function ProjectListClient({
 
                               <div className="mt-1 text-xs text-slate-500">
                                 Type:{" "}
-                                {m.why ? (
-                                  <div className="mt-2 text-sm text-slate-700">
-                                    {m.why}
-                                  </div>
-                                ) : null}
                                 <span className="font-mono">
                                   {m.investor.investor_type}
                                 </span>
                               </div>
+
+                              {m.why ? (
+                                <div className="mt-2 text-sm text-slate-700">
+                                  {m.why}
+                                </div>
+                              ) : null}
 
                               <div className="mt-2 flex flex-wrap gap-2">
                                 {Array.isArray(m.reason_points) &&

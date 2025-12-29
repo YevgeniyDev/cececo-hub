@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.db.session import SessionLocal
 from app.models.country import Country
@@ -28,59 +28,163 @@ SEED_COUNTRIES = [
 
 # kind, country_iso2, title, summary, sector, stage, website
 SEED_PROJECTS = [
-    # Original seed data
-    ("project", "KZ", "Grid Flex Pilot", "Pilot to improve grid flexibility and demand response coordination.", "Grid", "pilot", None),
+    # -----------------------------
+    # Türkiye (TR) — 5+ projects
+    # -----------------------------
     ("project", "TR", "Rooftop Solar Acceleration", "Toolkit for rooftop PV rollout: permitting, financing, and standards.", "Solar", "scaling", None),
+    ("project", "TR", "YEKA Renewable Energy Auctions", "National competitive procurement program supporting utility-scale renewable pipeline development.", "Policy/Market", "scaling", "https://enerji.gov.tr"),
+    ("project", "TR", "Karapınar Solar Program", "Large-scale solar buildout program and local manufacturing ecosystem reference entry.", "Solar", "operational", "https://kalyonpv.com"),
+    ("project", "TR", "Corporate PPA Enablement", "Market pathway entry: corporate PPAs for renewable procurement and revenue stability.", "Policy/Market", "scaling", None),
+    ("project", "TR", "Grid Flexibility Pilots", "Demand response and flexibility pilots enabling storage and balancing services.", "Grid", "pilot", None),
+
+    # Türkiye (TR) — 5+ startups (kind=startup)
+    ("startup", "TR", "ZES EV Charging (Enerjisa)", "EV charging network expanding public charging access across Türkiye.", "Mobility", "scaling", "https://zes.net"),
+    ("startup", "TR", "Inavitas", "Wind/renewables analytics and forecasting to improve dispatch and asset performance.", "Wind", "scaling", "https://inavitas.com"),
+    ("startup", "TR", "Entek Elektrik (innovation arm listing)", "Renewables developer/operator listing for ecosystem credibility and pipeline visibility.", "Energy", "scaling", "https://www.entekelektrik.com.tr"),
+    ("startup", "TR", "Werover (energy efficiency)", "Efficiency solutions and monitoring for commercial buildings and SMEs.", "Efficiency", "seed", None),
+    ("startup", "TR", "Voltla", "EV charging software/hardware solutions for fleets and property operators.", "Mobility", "seed", None),
+
+    # -----------------------------
+    # Azerbaijan (AZ) — 5+ projects
+    # -----------------------------
     ("project", "AZ", "Wind Resource Screening", "Nationwide screening of wind potential sites with simple feasibility scoring.", "Wind", "planning", None),
-    ("project", "KG", "Microhydro Modernization", "Upgrade package for microhydro plants: controls, monitoring, and safety.", "Hydro", "pilot", None),
-    ("startup", "UZ", "AgriSolar", "Solar-powered irrigation + monitoring for farms and cooperatives.", "AgriTech", "seed", "https://example.com"),
-    ("startup", "PK", "BatterySwap", "Swappable battery network for light EV fleets and last-mile delivery.", "Mobility", "pre-seed", None),
+    ("project", "AZ", "Garadagh Solar Power Plant", "Flagship utility-scale solar investment entry to anchor the renewable pipeline.", "Solar", "operational", "https://masdar.ae"),
+    ("project", "AZ", "Khizi-Absheron Wind Project", "Large wind development supporting diversification into renewables.", "Wind", "construction", "https://masdar.ae"),
+    ("project", "AZ", "Grid Connection & Dispatch Modernization", "Grid and dispatch modernization to support higher renewable penetration.", "Grid", "scaling", None),
+    ("project", "AZ", "Renewables Procurement Roadmap", "Market pathway entry: procurement steps and contracting improvements for bankability.", "Policy/Market", "planning", None),
+
+    # Azerbaijan (AZ) — 5+ startups
+    ("startup", "AZ", "Azerconnect (smart metering listing)", "Digital infrastructure / metering ecosystem listing supporting grid data upgrades.", "Grid", "scaling", None),
+    ("startup", "AZ", "SOCAR Green (ecosystem listing)", "Energy transition initiative listing for ecosystem navigation and partnerships.", "Energy", "scaling", None),
+    ("startup", "AZ", "Caspian Solar Solutions", "Solar EPC + rooftop deployment for SMEs and commercial facilities.", "Solar", "seed", None),
+    ("startup", "AZ", "Baku EV Services", "Charging + fleet electrification services listing for mobility transition.", "Mobility", "seed", None),
+    ("startup", "AZ", "WindOps Azerbaijan", "Wind O&M / analytics services listing for performance and reliability.", "Wind", "seed", None),
+
+    # -----------------------------
+    # Pakistan (PK) — 5+ projects
+    # -----------------------------
+    ("project", "PK", "Quaid-e-Azam Solar Park", "Large-scale solar reference entry anchoring utility-scale solar visibility.", "Solar", "operational", None),
+    ("project", "PK", "Jhimpir Wind Corridor", "Wind cluster entry representing multiple operational wind farm developments.", "Wind", "operational", None),
+    ("project", "PK", "Net Metering Expansion Program", "Distributed solar adoption pathway via regulatory and interconnection improvements.", "Policy/Market", "scaling", None),
+    ("project", "PK", "Loss Reduction & Grid Monitoring", "Grid loss reduction pilots and monitoring upgrades for reliability improvements.", "Grid", "pilot", None),
+    ("project", "PK", "Industrial Efficiency Retrofit Program", "Efficiency retrofits for industry with measurement and verification workflows.", "Efficiency", "scaling", None),
+
+    # Pakistan (PK) — 5+ startups
+    ("startup", "PK", "Reon Energy", "Solar EPC and energy solutions provider supporting commercial and industrial deployments.", "Solar", "scaling", "https://reonenergy.com"),
+    ("startup", "PK", "SkyElectric", "Solar + storage solutions for resilience and reliable power for homes and SMEs.", "Storage", "scaling", "https://skyelectric.com"),
+    ("startup", "PK", "EcoEnergy Services", "Energy efficiency audits and retrofit delivery for SMEs and commercial buildings.", "Efficiency", "seed", None),
+    ("startup", "PK", "ChargeUp Pakistan", "EV charging + fleet electrification services listing for early market development.", "Mobility", "seed", None),
+    ("startup", "PK", "AgriWater Solar", "Solar-powered irrigation and monitoring solutions for farms and cooperatives.", "AgriTech", "seed", None),
+
+    # -----------------------------
+    # Kazakhstan (KZ) — 5+ projects
+    # -----------------------------
+    ("project", "KZ", "Grid Flex Pilot", "Pilot to improve grid flexibility and demand response coordination.", "Grid", "pilot", None),
+    ("project", "KZ", "Renewable Energy Auctions", "Auction-based procurement pathway for renewables; improves pipeline visibility.", "Policy/Market", "scaling", None),
+    ("project", "KZ", "Ereymentau Wind Farm (reference)", "Operational wind reference entry used to anchor wind pipeline maturity.", "Wind", "operational", None),
+    ("project", "KZ", "Burnoye Solar Plant (reference)", "Operational solar reference entry for early bankable PV deployments.", "Solar", "operational", None),
+    ("project", "KZ", "District Heating Modernization", "Efficiency and monitoring upgrades for district heating and buildings.", "Efficiency", "scaling", None),
+
+    # Kazakhstan (KZ) — 5+ startups
     ("startup", "KZ", "HeatSense", "Smart heat monitoring to cut losses in district heating and buildings.", "Efficiency", "seed", None),
-    # Türkiye (TR)
-    ("project", "TR", "Karapınar Solar Power Plant (Kalyon)", "Utility-scale solar mega-project in Konya; one of Türkiye's flagship PV builds.", "Solar", "operational", "https://kalyonpv.com"),
-    ("project", "TR", "YEKA Renewable Energy Auctions", "Government auction program that drives utility-scale renewable procurement and pipeline visibility.", "Policy/Market", "scaling", "https://enerji.gov.tr"),
-    ("startup", "TR", "ZES EV Charging (Enerjisa)", "Nationwide EV charging network expanding public charging access.", "Mobility", "scaling", "https://zes.net"),
-    ("startup", "TR", "Inavitas (wind analytics)", "Wind energy analytics and forecasting solutions (tech-enabled clean energy).", "Wind", "scaling", "https://inavitas.com"),
-    ("project", "TR", "Çanakkale Wind Developments (region cluster)", "Çanakkale region hosts multiple wind farms; useful for a 'wind cluster' project entry.", "Wind", "operational", None),
-    # Azerbaijan (AZ)
-    ("project", "AZ", "Garadagh Solar Power Plant (Masdar)", "~230 MW solar project near Baku; landmark renewable investment.", "Solar", "operational", "https://masdar.ae"),
-    ("project", "AZ", "Khizi-Absheron Wind Power Project (Masdar)", "Large wind development supporting Azerbaijan's diversification into renewables.", "Wind", "construction", "https://masdar.ae"),
-    ("project", "AZ", "Absheron Wind Resource Screening", "Countrywide wind site screening and early-stage pipeline building (turn into a 'planning project' entry with sources).", "Wind", "planning", None),
-    # Kazakhstan (KZ)
-    ("project", "KZ", "Ereymentau Wind Farm", "One of Kazakhstan's notable wind farms; useful for 'operational wind' reference.", "Wind", "operational", None),
-    ("project", "KZ", "Burnoye Solar Power Plant", "Utility-scale solar plant frequently referenced as early flagship solar in Kazakhstan.", "Solar", "operational", None),
-    ("project", "KZ", "Renewable Energy Auctions (Kazakhstan)", "Auction-based procurement pathway for renewables; anchor entry for policy→pipeline linkage.", "Policy/Market", "scaling", None),
-    ("startup", "KZ", "Qazaq Green / RE ecosystem group", "Ecosystem actor supporting renewables; can sit as a directory entry for credibility.", "Energy", "scaling", "https://qazaqgreen.kz"),
-    # Uzbekistan (UZ)
-    ("project", "UZ", "Navoi Solar Power Plant (Masdar)", "~100 MW project; first large-scale solar landmark helping build bankable pipeline.", "Solar", "operational", "https://masdar.ae"),
-    ("project", "UZ", "Zarafshan Wind Farm (ACWA Power)", "Major wind investment creating a flagship wind pipeline reference.", "Wind", "construction", "https://www.acwapower.com"),
-    ("project", "UZ", "Utility-Scale Solar Pipeline (EBRD/ADB tenders)", "Uzbekistan has been running/announcing solar tenders and IPP pipeline support.", "Solar", "scaling", None),
-    # Kyrgyzstan (KG)
-    ("project", "KG", "Kambar-Ata-1 Hydropower Project", "Large hydro project under development; major regional electricity and flexibility impact.", "Hydro", "planning", None),
-    ("project", "KG", "Toktogul HPP Rehabilitation (concept entry)", "Toktogul is Kyrgyzstan's key hydro asset; add a rehab/modernization project entry with sources you choose.", "Hydro", "scaling", None),
-    ("project", "KG", "Small Hydropower Modernization Program", "Small hydro upgrades (controls/monitoring/safety) are 'quick win' bankable interventions.", "Hydro", "pilot", None),
-    # Pakistan (PK)
-    ("project", "PK", "Quaid-e-Azam Solar Park", "Large solar park often referenced as Pakistan's flagship solar installation.", "Solar", "operational", None),
-    ("project", "PK", "Jhimpir Wind Corridor (cluster)", "Wind corridor with multiple wind farms; use as 'wind cluster' project entry.", "Wind", "operational", None),
-    ("startup", "PK", "Reon Energy", "Pakistani solar EPC and energy solutions company (good real ecosystem entry).", "Solar", "scaling", "https://reonenergy.com"),
-    ("startup", "PK", "SkyElectric", "Solar + storage solutions company; strong 'distributed resilience' story.", "Storage", "scaling", "https://skyelectric.com"),
-    ("startup", "PK", "Bykea (mobility electrification adjacency)", "Mobility platform (not pure energy); only include if you want 'transition' ecosystem breadth.", "Mobility", "scaling", "https://bykea.com"),
+    ("startup", "KZ", "Qazaq Green (ecosystem listing)", "Renewables ecosystem actor enabling projects, partnerships and market visibility.", "Energy", "scaling", "https://qazaqgreen.kz"),
+    ("startup", "KZ", "Steppe Storage", "Battery storage integration services for grid operators and C&I users.", "Storage", "seed", None),
+    ("startup", "KZ", "WindVision KZ", "Wind resource analytics and operational optimization for wind assets.", "Wind", "seed", None),
+    ("startup", "KZ", "SolarRoof KZ", "Distributed rooftop solar development for SMEs and industrial sites.", "Solar", "seed", None),
+
+    # -----------------------------
+    # Uzbekistan (UZ) — 5+ projects
+    # -----------------------------
+    ("project", "UZ", "Navoi Solar Power Plant", "Utility-scale solar reference entry anchoring bankable renewable deployments.", "Solar", "operational", "https://masdar.ae"),
+    ("project", "UZ", "Zarafshan Wind Farm", "Major wind investment reference entry supporting large-scale wind pipeline.", "Wind", "construction", "https://www.acwapower.com"),
+    ("project", "UZ", "Utility-Scale Solar Pipeline", "Pipeline entry representing tendered/announced utility solar expansion efforts.", "Solar", "scaling", None),
+    ("project", "UZ", "Grid Modernization & Dispatch Upgrade", "Dispatch and grid modernization to support integration and reliability.", "Grid", "scaling", None),
+    ("project", "UZ", "Efficiency for Agriculture & Irrigation", "Efficiency and monitoring solutions for agriculture and irrigation operations.", "AgriTech", "pilot", None),
+
+    # Uzbekistan (UZ) — 5+ startups
+    ("startup", "UZ", "AgriSolar", "Solar-powered irrigation + monitoring for farms and cooperatives.", "AgriTech", "seed", "https://example.com"),
+    ("startup", "UZ", "UzbCharge", "EV charging infrastructure services listing for emerging mobility transition.", "Mobility", "seed", None),
+    ("startup", "UZ", "SolarWorks UZ", "Solar EPC + financing facilitation for commercial rooftops.", "Solar", "seed", None),
+    ("startup", "UZ", "GridSense UZ", "Smart metering and grid monitoring tools for utilities and large users.", "Grid", "seed", None),
+    ("startup", "UZ", "EfficientHomes UZ", "Building efficiency retrofit delivery and audit tooling for households and SMEs.", "Efficiency", "seed", None),
+
+    # -----------------------------
+    # Kyrgyzstan (KG) — 5+ projects
+    # -----------------------------
+    ("project", "KG", "Microhydro Modernization", "Upgrade package for microhydro plants: controls, monitoring, and safety.", "Hydro", "pilot", None),
+    ("project", "KG", "Kambar-Ata-1 Hydropower Project", "Large hydro development reference entry with major grid and flexibility impact.", "Hydro", "planning", None),
+    ("project", "KG", "Toktogul HPP Rehabilitation (concept)", "Rehabilitation/modernization concept entry for a core national hydro asset.", "Hydro", "scaling", None),
+    ("project", "KG", "Small Hydro Modernization Program", "Small hydro upgrades as quick-win bankable interventions.", "Hydro", "pilot", None),
+    ("project", "KG", "Buildings Efficiency Standards Rollout", "Standards + retrofit program entry to build efficiency market demand.", "Efficiency", "planning", None),
+
+    # Kyrgyzstan (KG) — 5+ startups
+    ("startup", "KG", "HydroSafe KG", "Micro-hydro monitoring, safety and controls solutions for small plants.", "Hydro", "seed", None),
+    ("startup", "KG", "GridReliability KG", "Low-cost grid monitoring and outage analytics for utilities and SMEs.", "Grid", "seed", None),
+    ("startup", "KG", "WarmHome KG", "Building efficiency retrofits and heat-loss reduction services.", "Efficiency", "seed", None),
+    ("startup", "KG", "SolarCoop KG", "Community/SME rooftop solar development listing with basic deployment tooling.", "Solar", "seed", None),
+    ("startup", "KG", "AgriPump Solar KG", "Solar pumping and irrigation optimization for farms and cooperatives.", "AgriTech", "seed", None),
 ]
 
 SEED_INVESTORS = [
+    # -----------------------------
+    # FUND (4+)
+    # -----------------------------
     ("GreenBridge Capital", "fund", "Solar,Wind,Grid", "seed,seriesA", 250000, 2000000, None, None),
-    ("Steppe Angels", "angel", "Efficiency,Mobility,AgriTech", "pre-seed,seed", 25000, 150000, None, None),
     ("Eurasia Energy Ventures", "fund", "Hydro,Grid,Storage", "seriesA,seriesB", 500000, 5000000, None, None),
+    ("Transition Growth Fund", "fund", "Efficiency,Storage,Mobility", "seed,seriesA,seriesB", 150000, 3000000, None, None),
+    ("Frontier Renewables Fund", "fund", "Solar,Wind,AgriTech", "pre-seed,seed,seriesA", 100000, 1500000, None, None),
+
+    # -----------------------------
+    # ANGEL (4+)
+    # -----------------------------
+    ("Steppe Angels", "angel", "Efficiency,Mobility,AgriTech", "pre-seed,seed", 25000, 150000, None, None),
+    ("Anatolia Angels", "angel", "Solar,Efficiency,Grid", "pre-seed,seed", 20000, 120000, None, None),
+    ("Caspian Angels Network", "angel", "Wind,Solar,Storage", "pre-seed,seed", 15000, 100000, None, None),
+    ("Silk Road Angels", "angel", "AgriTech,Water,Efficiency", "pre-seed,seed", 10000, 80000, None, None),
+
+    # -----------------------------
+    # PUBLIC (4+)
+    # -----------------------------
     ("National Climate Program", "public", "Policy,Grid,Efficiency", "pilot,scaling", None, None, None, None),
+    ("Development Finance Facility", "public", "Solar,Wind,Grid,Storage", "scaling,seriesA,seriesB", 500000, 10000000, None, None),
+    ("Green Infrastructure Agency", "public", "Grid,Efficiency,Policy", "planning,pilot,scaling", 250000, 5000000, None, None),
+    ("Sovereign Energy Transition Program", "public", "Hydro,Solar,Wind,Grid", "planning,scaling", 1000000, 20000000, None, None),
+
+    # -----------------------------
+    # NGO (4+)
+    # -----------------------------
     ("Impact for Regions", "ngo", "AgriTech,Efficiency,Water", "pilot,seed", 50000, 500000, None, None),
+    ("Clean Energy Access Initiative", "ngo", "Solar,Efficiency,AgriTech", "pilot,seed", 25000, 300000, None, None),
+    ("Resilient Cities Network", "ngo", "Efficiency,Grid,Mobility", "pilot,seed", 30000, 400000, None, None),
+    ("Climate Innovation Catalyst", "ngo", "Storage,Grid,Policy", "pilot,seed,scaling", 50000, 750000, None, None),
 ]
 
 INVESTOR_COUNTRY_MAP = {
+    # Existing
     "GreenBridge Capital": ["KZ", "TR"],
     "Steppe Angels": ["KZ", "UZ"],
     "Eurasia Energy Ventures": ["AZ", "PK"],
     "National Climate Program": ["KZ", "KG", "UZ"],
     "Impact for Regions": ["PK", "KG", "UZ"],
+
+    # New funds
+    "Transition Growth Fund": ["TR", "PK", "KZ"],
+    "Frontier Renewables Fund": ["AZ", "UZ", "KG"],
+
+    # New angels
+    "Anatolia Angels": ["TR", "AZ"],
+    "Caspian Angels Network": ["AZ", "KZ", "UZ"],
+    "Silk Road Angels": ["PK", "UZ", "KG"],
+
+    # New public
+    "Development Finance Facility": ["TR", "AZ", "PK", "KZ", "UZ"],
+    "Green Infrastructure Agency": ["KZ", "KG", "UZ"],
+    "Sovereign Energy Transition Program": ["TR", "PK", "KZ", "AZ"],
+
+    # New NGOs
+    "Clean Energy Access Initiative": ["PK", "KG", "UZ"],
+    "Resilient Cities Network": ["TR", "KZ", "PK"],
+    "Climate Innovation Catalyst": ["AZ", "UZ", "KZ"],
 }
 
 
@@ -373,45 +477,70 @@ def seed_initial_data() -> None:
                 )
             db.commit()
 
-        # 2) Projects/Startups: seed only if table empty
-        if db.query(Project).count() == 0:
-            for kind, iso2, title, summary, sector, stage, website in SEED_PROJECTS:
-                country_id = iso2_to_id.get(iso2)
-                if not country_id:
-                    continue
+        # 2) Projects/Startups: seed missing (idempotent)
+        existing_projects = set(
+            db.query(Project.kind, Project.country_id, Project.title).all()
+        )
 
-                db.add(
-                    Project(
-                        kind=kind,
-                        country_id=country_id,
-                        title=title,
-                        summary=summary,
-                        sector=sector,
-                        stage=stage,
-                        website=website,
-                    )
+        added = 0
+        for kind, iso2, title, summary, sector, stage, website in SEED_PROJECTS:
+            country_id = iso2_to_id.get(iso2)
+            if not country_id:
+                continue
+
+            key = (kind, country_id, title)
+            if key in existing_projects:
+                continue
+
+            db.add(
+                Project(
+                    kind=kind,
+                    country_id=country_id,
+                    title=title,
+                    summary=summary,
+                    sector=sector,
+                    stage=stage,
+                    website=website,
                 )
+            )
+            existing_projects.add(key)
+            added += 1
+
+        if added:
             db.commit()
 
-        # 3) Investors: seed only if table empty
-        if db.query(Investor).count() == 0:
-            for name, itype, sectors, stages, tmin, tmax, website, email in SEED_INVESTORS:
-                db.add(
-                    Investor(
-                        name=name,
-                        investor_type=itype,
-                        focus_sectors=sectors,
-                        stages=stages,
-                        ticket_min=tmin,
-                        ticket_max=tmax,
-                        website=website,
-                        contact_email=email,
-                    )
+
+        # 3) Investors: seed missing (idempotent)
+        existing_investors = set(
+            db.query(Investor.name, Investor.investor_type).all()
+        )
+
+        added = 0
+        for name, itype, sectors, stages, tmin, tmax, website, email in SEED_INVESTORS:
+            key = (name, itype)
+            if key in existing_investors:
+                continue
+
+            db.add(
+                Investor(
+                    name=name,
+                    investor_type=itype,
+                    focus_sectors=sectors,
+                    stages=stages,
+                    ticket_min=tmin,
+                    ticket_max=tmax,
+                    website=website,
+                    contact_email=email,
                 )
+            )
+            existing_investors.add(key)
+            added += 1
+
+        if added:
             db.commit()
 
         # 4) Investor ↔ Country assignment (only if empty for that investor)
-        investors = db.query(Investor).all()
+        investors = db.query(Investor).options(selectinload(Investor.countries)).all()
         by_name = {i.name: i for i in investors}
 
         changed = False
