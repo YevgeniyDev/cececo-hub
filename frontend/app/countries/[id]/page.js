@@ -16,9 +16,9 @@ function scoreLabel(v) {
   const vv = clamp01(v);
   if (vv === null) return null;
   const n = Math.round(vv * 100);
-  if (n >= 75) return { text: `${n}`, tone: "high", label: "Strong" };
-  if (n >= 55) return { text: `${n}`, tone: "med", label: "Moderate" };
-  return { text: `${n}`, tone: "low", label: "Early" };
+  if (n >= 75) return { n, tone: "high", label: "Strong" };
+  if (n >= 55) return { n, tone: "med", label: "Moderate" };
+  return { n, tone: "low", label: "Early" };
 }
 
 function tonePill(tone) {
@@ -26,6 +26,12 @@ function tonePill(tone) {
     return "border-emerald-200 bg-emerald-50 text-emerald-800";
   if (tone === "med") return "border-amber-200 bg-amber-50 text-amber-800";
   return "border-rose-200 bg-rose-50 text-rose-800";
+}
+
+function toneDot(tone) {
+  if (tone === "high") return "bg-emerald-500";
+  if (tone === "med") return "bg-amber-500";
+  return "bg-rose-500";
 }
 
 function formatDate(iso) {
@@ -48,7 +54,7 @@ function safeText(v, fallback = "—") {
 }
 
 function uniq(arr) {
-  return Array.from(new Set(arr));
+  return Array.from(new Set(arr.filter(Boolean)));
 }
 
 function normalizeToken(s) {
@@ -56,14 +62,6 @@ function normalizeToken(s) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, " ")
     .trim();
-}
-
-function parseCSVishList(s) {
-  if (!s) return [];
-  return String(s)
-    .split(",")
-    .map((x) => x.trim())
-    .filter(Boolean);
 }
 
 function topNFromCounts(counts, n = 5) {
@@ -123,123 +121,7 @@ async function getProjects(countryId, kind) {
   return res.json();
 }
 
-/* ----------------------------- mechanics mapping ----------------------------- */
-/**
- * Turn frameworks + policies into actionable “market mechanics” buckets.
- * This is what makes the page feel valuable (not just “lists”).
- */
-function bucketMechanics(country) {
-  const frameworks = country.frameworks || [];
-  const policies = country.policies || [];
-
-  const buckets = [
-    {
-      key: "procurement",
-      title: "Procurement & auctions",
-      subtitle: "How utility-scale projects get contracted",
-      match: (x) =>
-        /auction|tender|procurement|competitive/.test(normalizeToken(x)),
-    },
-    {
-      key: "revenue",
-      title: "Revenue contracts (PPAs)",
-      subtitle: "What reduces revenue risk for developers",
-      match: (x) => /ppa|power purchase|contract/.test(normalizeToken(x)),
-    },
-    {
-      key: "distributed",
-      title: "Distributed energy rules",
-      subtitle: "Net metering, rooftop solar, small generation",
-      match: (x) =>
-        /net metering|distributed|rooftop|small scale/.test(normalizeToken(x)),
-    },
-    {
-      key: "grid",
-      title: "Grid access & integration",
-      subtitle: "Interconnection, grid codes, flexibility",
-      match: (x) =>
-        /grid|interconnection|connection|code|flexibility|demand response|ancillary|storage/.test(
-          normalizeToken(x)
-        ),
-    },
-    {
-      key: "efficiency",
-      title: "Efficiency & standards",
-      subtitle: "Buildings, industry, and demand-side measures",
-      match: (x) =>
-        /efficiency|standard|retrofit|building|appliance/.test(
-          normalizeToken(x)
-        ),
-    },
-    {
-      key: "finance",
-      title: "Incentives & enabling programs",
-      subtitle: "What improves economics and delivery",
-      match: (x) =>
-        /incentive|support|subsidy|tax|grant|program|roadmap|strategy|target/.test(
-          normalizeToken(x)
-        ),
-    },
-  ];
-
-  const addItem = (bucketKey, item, type) => {
-    const title = type === "framework" ? item.name : item.title;
-    const desc = type === "framework" ? item.description : item.summary;
-    const status = item.status || "—";
-    const why = item.why_it_matters || null;
-    const source = item.source_url || null;
-    return {
-      type,
-      id: item.id,
-      title,
-      desc,
-      status,
-      why,
-      source,
-      meta:
-        type === "framework"
-          ? item.framework_type
-          : item.policy_type || "policy",
-      bucket: bucketKey,
-    };
-  };
-
-  const results = {};
-  for (const b of buckets) results[b.key] = { ...b, items: [] };
-
-  // frameworks into buckets
-  for (const f of frameworks) {
-    const hay = `${f.framework_type || ""} ${f.name || ""} ${
-      f.description || ""
-    }`;
-    const key =
-      buckets.find((b) => b.match(hay))?.key ||
-      (f.framework_type ? "grid" : "finance");
-    results[key].items.push(addItem(key, f, "framework"));
-  }
-
-  // policies into buckets
-  for (const p of policies) {
-    const hay = `${p.policy_type || ""} ${p.title || ""} ${p.summary || ""}`;
-    const key =
-      buckets.find((b) => b.match(hay))?.key ||
-      (p.policy_type ? "finance" : "finance");
-    results[key].items.push(addItem(key, p, "policy"));
-  }
-
-  // Provide “what this unlocks” hints based on present mechanics
-  const present = Object.values(results).filter((b) => b.items.length > 0);
-  const missing = Object.values(results).filter((b) => b.items.length === 0);
-
-  const insights = {
-    presentCount: present.length,
-    missingCount: missing.length,
-    missingTop: missing.slice(0, 2).map((b) => b.title),
-  };
-
-  return { buckets: Object.values(results), insights };
-}
-
+/* ----------------------------- derived: focus & signals ----------------------------- */
 function computeFocusAreas({ projects, startups, newsItems }) {
   const sectorCounts = buildCounts(
     [...(projects || []), ...(startups || [])],
@@ -249,8 +131,6 @@ function computeFocusAreas({ projects, startups, newsItems }) {
     [...(projects || []), ...(startups || [])],
     (x) => (x.stage ? String(x.stage).trim() : "")
   );
-
-  // extra “signal topics” from news impact_type
   const topicCounts = buildCounts(newsItems || [], (x) =>
     x.impact_type ? String(x.impact_type).trim() : ""
   );
@@ -259,14 +139,15 @@ function computeFocusAreas({ projects, startups, newsItems }) {
   const topStages = topNFromCounts(stageCounts, 5);
   const topTopics = topNFromCounts(topicCounts, 5);
 
-  // build a readable “focus” array prioritizing sectors
-  const focus = topSectors.map((x) => x.key).filter(Boolean);
+  const focusAreas = topSectors.map((x) => x.key).filter(Boolean);
 
   return {
     topSectors,
     topStages,
     topTopics,
-    focusAreas: focus.length ? focus : ["Solar", "Wind", "Grid", "Efficiency"],
+    focusAreas: focusAreas.length
+      ? focusAreas
+      : ["Solar", "Wind", "Grid", "Efficiency"],
   };
 }
 
@@ -310,9 +191,192 @@ function scoreCardsFromIndicators(ind) {
         method: it?.method || null,
       };
     })
-    .sort((a, b) => (b.score?.text || 0) - (a.score?.text || 0));
+    .filter(Boolean);
 
-  return scored;
+  const present = scored.filter((x) => x.score);
+  const sorted = present
+    .slice()
+    .sort((a, b) => (b.score?.n || 0) - (a.score?.n || 0));
+
+  return { all: scored, sorted };
+}
+
+/* ----------------------------- derived: market mechanics ----------------------------- */
+/**
+ * Convert frameworks + policies into actionable buckets.
+ * Goal: show “how execution works” instead of dumping lists.
+ */
+function bucketMechanics(country) {
+  const frameworks = country.frameworks || [];
+  const policies = country.policies || [];
+
+  const buckets = [
+    {
+      key: "procurement",
+      title: "Procurement & auctions",
+      subtitle: "How utility-scale projects get contracted",
+      match: (x) =>
+        /auction|tender|procurement|competitive|bid/.test(normalizeToken(x)),
+      unlocks: [
+        "Clear route to utility-scale deals",
+        "Price discovery and bankability signals",
+      ],
+    },
+    {
+      key: "revenue",
+      title: "Revenue contracts (PPAs)",
+      subtitle: "What reduces revenue risk for developers",
+      match: (x) => /ppa|power purchase|contract/.test(normalizeToken(x)),
+      unlocks: ["Stable revenue structures", "Corporate procurement pathways"],
+    },
+    {
+      key: "distributed",
+      title: "Distributed energy rules",
+      subtitle: "Net metering, rooftop solar, small generation",
+      match: (x) =>
+        /net metering|distributed|rooftop|small scale|feed in/.test(
+          normalizeToken(x)
+        ),
+      unlocks: [
+        "SME/household adoption",
+        "Fast deployment and local installers",
+      ],
+    },
+    {
+      key: "grid",
+      title: "Grid access & integration",
+      subtitle: "Interconnection, grid codes, flexibility",
+      match: (x) =>
+        /grid|interconnection|connection|code|flexibility|demand response|ancillary|storage/.test(
+          normalizeToken(x)
+        ),
+      unlocks: [
+        "Lower integration risk",
+        "Storage/flexibility business models",
+      ],
+    },
+    {
+      key: "efficiency",
+      title: "Efficiency & standards",
+      subtitle: "Buildings, industry, and demand-side measures",
+      match: (x) =>
+        /efficiency|standard|retrofit|building|appliance|loss/.test(
+          normalizeToken(x)
+        ),
+      unlocks: [
+        "Stable demand for efficiency solutions",
+        "Measurable near-term impact",
+      ],
+    },
+    {
+      key: "finance",
+      title: "Incentives & enabling programs",
+      subtitle: "What improves economics and delivery",
+      match: (x) =>
+        /incentive|support|subsidy|tax|grant|program|roadmap|strategy|target|plan/.test(
+          normalizeToken(x)
+        ),
+      unlocks: [
+        "Improved unit economics",
+        "Clear priority sectors and timelines",
+      ],
+    },
+  ];
+
+  const addItem = (bucketKey, item, type) => {
+    const title = type === "framework" ? item.name : item.title;
+    const desc = type === "framework" ? item.description : item.summary;
+    const status = item.status || "—";
+    const why = item.why_it_matters || null;
+    const source = item.source_url || null;
+
+    return {
+      type,
+      id: item.id,
+      title,
+      desc,
+      status,
+      why,
+      source,
+      meta:
+        type === "framework"
+          ? item.framework_type
+          : item.policy_type || "policy",
+      bucket: bucketKey,
+    };
+  };
+
+  const results = {};
+  for (const b of buckets) results[b.key] = { ...b, items: [] };
+
+  for (const f of frameworks) {
+    const hay = `${f.framework_type || ""} ${f.name || ""} ${
+      f.description || ""
+    }`;
+    const key =
+      buckets.find((b) => b.match(hay))?.key ||
+      (f.framework_type ? "grid" : "finance");
+    results[key].items.push(addItem(key, f, "framework"));
+  }
+
+  for (const p of policies) {
+    const hay = `${p.policy_type || ""} ${p.title || ""} ${p.summary || ""}`;
+    const key = buckets.find((b) => b.match(hay))?.key || "finance";
+    results[key].items.push(addItem(key, p, "policy"));
+  }
+
+  const bucketList = Object.values(results);
+
+  const present = bucketList.filter((b) => b.items.length > 0);
+  const missing = bucketList.filter((b) => b.items.length === 0);
+
+  // quick “so what”
+  const insight =
+    present.length >= 4
+      ? "Execution pathways are well-defined across multiple levers."
+      : present.length >= 2
+      ? "Some pathways are defined; a few key levers are still emerging."
+      : "Limited recorded pathways — add more policies/frameworks to clarify execution.";
+
+  // highlight 2 strongest buckets by item count
+  const topBuckets = present
+    .slice()
+    .sort((a, b) => b.items.length - a.items.length)
+    .slice(0, 2)
+    .map((b) => b.title);
+
+  return {
+    buckets: bucketList,
+    insight,
+    missingTop: missing.slice(0, 2).map((b) => b.title),
+    topBuckets,
+  };
+}
+
+/* ----------------------------- UI helpers ----------------------------- */
+function Anchor({ href, children }) {
+  return (
+    <a
+      href={href}
+      className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+    >
+      {children}
+    </a>
+  );
+}
+
+function MiniStat({ label, value, sub }) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="text-[11px] font-extrabold uppercase tracking-wide text-slate-500">
+        {label}
+      </div>
+      <div className="mt-2 text-2xl font-extrabold tracking-tight text-slate-950">
+        {value}
+      </div>
+      {sub ? <div className="mt-1 text-sm text-slate-600">{sub}</div> : null}
+    </div>
+  );
 }
 
 /* ----------------------------- page ----------------------------- */
@@ -326,18 +390,19 @@ export default async function CountryBriefingPage({ params }) {
   ]);
 
   const newsItems = newsRaw?.items || newsRaw || [];
-  const topNews = newsItems.slice(0, 8);
+  const latestDate = newsItems?.[0]?.published_at
+    ? formatDate(newsItems[0].published_at)
+    : "—";
 
   // indicators map
   const ind = {};
   for (const x of country.indicators || []) ind[x.key] = x;
 
-  // prev/next (by id order from API)
+  // prev/next
   const ids = (countries || []).map((c) => c.id);
   const idx = ids.indexOf(country.id);
   const prevId = idx > 0 ? ids[idx - 1] : null;
   const nextId = idx >= 0 && idx < ids.length - 1 ? ids[idx + 1] : null;
-
   const prevName =
     prevId != null
       ? countries.find((c) => c.id === prevId)?.name ?? "Previous"
@@ -348,59 +413,31 @@ export default async function CountryBriefingPage({ params }) {
       : null;
 
   const focus = computeFocusAreas({ projects, startups, newsItems });
-  const scoredSignals = scoreCardsFromIndicators(ind);
-
+  const signals = scoreCardsFromIndicators(ind);
   const mechanics = bucketMechanics(country);
-  const frameworksCount = (country.frameworks || []).length;
-  const policiesCount = (country.policies || []).length;
 
   const projectsCount = (projects || []).length;
   const startupsCount = (startups || []).length;
+  const frameworksCount = (country.frameworks || []).length;
+  const policiesCount = (country.policies || []).length;
 
-  const latestUpdateDate = topNews[0]?.published_at
-    ? formatDate(topNews[0].published_at)
-    : "—";
+  const topNews = newsItems.slice(0, 6);
 
-  const quickBadges = uniq([
-    ...focus.focusAreas.slice(0, 3),
-    country.region ? country.region : "",
-  ]).filter(Boolean);
+  const topSector = focus.topSectors?.[0]?.key || "—";
+  const topStage = focus.topStages?.[0]?.key || "—";
+  const topTopic = focus.topTopics?.[0]?.key || null;
 
-  // “ecosystem highlight” cards derived from data (unique per country)
-  const topSector = focus.topSectors?.[0]?.key || null;
-  const topStage = focus.topStages?.[0]?.key || null;
+  const strongest = signals.sorted.slice(0, 2);
+  const weakest = signals.sorted.slice(-2);
 
-  const ecosystemHighlights = [
-    {
-      label: "Primary focus",
-      value: topSector ? topSector : "—",
-      sub: topSector ? `Most common sector in listings` : "Add sector data",
-    },
-    {
-      label: "Stage momentum",
-      value: topStage ? topStage : "—",
-      sub: topStage
-        ? `Most common stage across projects/startups`
-        : "Add stage data",
-    },
-    {
-      label: "Listings",
-      value: `${projectsCount + startupsCount}`,
-      sub: `${projectsCount} projects • ${startupsCount} startups`,
-    },
-    {
-      label: "Signals",
-      value: `${newsItems.length}`,
-      sub: `Recent public updates`,
-    },
-  ];
-
-  // Institutions / targets (optional; will render if you add them)
-  const institutions = country.institutions || [];
-  const targets = country.targets || [];
+  const heroBadges = uniq([
+    `ISO:${country.iso2}`,
+    ...focus.focusAreas.slice(0, 2),
+    country.region,
+  ]).slice(0, 4);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Top navigation */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
@@ -451,49 +488,61 @@ export default async function CountryBriefingPage({ params }) {
         </div>
       </div>
 
-      {/* Header (NOT like main page) */}
-      <section className="rounded-3xl border border-slate-200 bg-white shadow-sm">
-        <div className="p-6 md:p-8">
-          {/* Top row: title + meta */}
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
-                  ISO: {country.iso2}
-                </span>
-                {quickBadges.slice(0, 3).map((b) => (
-                  <span
-                    key={b}
-                    className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700"
-                  >
-                    {b}
-                  </span>
-                ))}
-              </div>
+      {/* HERO: concise, decision-first */}
+      <section className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute -left-24 -top-24 h-72 w-72 rounded-full bg-blue-500/10 blur-3xl" />
+          <div className="absolute -right-24 top-0 h-72 w-72 rounded-full bg-emerald-500/10 blur-3xl" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_20%,rgba(59,130,246,0.10),transparent_45%),radial-gradient(circle_at_82%_18%,rgba(16,185,129,0.10),transparent_45%)]" />
+        </div>
 
-              <h1 className="mt-4 text-4xl font-extrabold tracking-tight text-slate-950 md:text-5xl">
+        <div className="relative p-6 md:p-8">
+          {/* badges */}
+          <div className="flex flex-wrap gap-2">
+            {heroBadges.map((b) => (
+              <span
+                key={b}
+                className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700"
+              >
+                {b}
+              </span>
+            ))}
+            {topTopic ? (
+              <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700">
+                Topic: {topTopic}
+              </span>
+            ) : null}
+          </div>
+
+          <div className="mt-5 grid gap-6 lg:grid-cols-12 lg:items-start">
+            {/* left */}
+            <div className="lg:col-span-7">
+              <h1 className="text-4xl font-extrabold tracking-tight text-slate-950 md:text-5xl">
                 {country.name}
               </h1>
 
-              <p className="mt-3 max-w-3xl text-base leading-7 text-slate-700">
+              <p className="mt-3 max-w-2xl text-base leading-7 text-slate-700">
                 {safeText(
                   country.briefing,
-                  "A structured briefing that combines readiness signals, market mechanics, and ecosystem navigation in one place."
+                  "A structured view of readiness, market rules, and ecosystem activity — built for quick, practical decisions."
                 )}
               </p>
 
+              {/* section anchors (helps usability) */}
               <div className="mt-5 flex flex-wrap gap-2">
-                <Link
-                  href={`/news?country_id=${country.id}`}
-                  className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-slate-800"
-                >
-                  View updates →
-                </Link>
+                <Anchor href="#signals">Readiness</Anchor>
+                <Anchor href="#mechanics">Market mechanics</Anchor>
+                <Anchor href="#ecosystem">Ecosystem</Anchor>
+                <Anchor href="#signals-feed">Signals</Anchor>
+              </div>
+
+              {/* primary actions */}
+              <div className="mt-6 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
                 <Link
                   href={`/projects?country_id=${country.id}`}
-                  className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50"
+                  className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-slate-800"
                 >
-                  Projects
+                  Explore projects →
                 </Link>
                 <Link
                   href={`/startups?country_id=${country.id}`}
@@ -507,72 +556,171 @@ export default async function CountryBriefingPage({ params }) {
                 >
                   Investors
                 </Link>
+                <Link
+                  href={`/news?country_id=${country.id}`}
+                  className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50"
+                >
+                  Latest signals
+                </Link>
               </div>
-            </div>
 
-            {/* Right meta card */}
-            <div className="w-full rounded-2xl border border-slate-200 bg-slate-50 p-5 md:w-[340px]">
-              <div className="flex items-start justify-between gap-3">
-                <div>
+              {/* strongest/weakest quick insight */}
+              <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                   <div className="text-xs font-extrabold uppercase tracking-wide text-slate-500">
-                    Coverage
+                    What looks strong
                   </div>
-                  <div className="mt-1 text-sm font-semibold text-slate-900">
-                    Listings, mechanisms, signals
+                  <div className="mt-2 space-y-2">
+                    {strongest.length ? (
+                      strongest.map((s) => (
+                        <div
+                          key={s.key}
+                          className="flex items-center justify-between gap-3"
+                        >
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`h-2.5 w-2.5 rounded-full ${toneDot(
+                                s.score.tone
+                              )}`}
+                            />
+                            <div className="text-sm font-semibold text-slate-900">
+                              {s.label}
+                            </div>
+                          </div>
+                          <div className="text-sm font-extrabold text-slate-900">
+                            {s.score.n}
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-sm text-slate-600">
+                        No indicators yet.
+                      </div>
+                    )}
                   </div>
                 </div>
-                <div className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700">
-                  Updated: {latestUpdateDate}
-                </div>
-              </div>
 
-              <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                {ecosystemHighlights.map((k) => (
-                  <div
-                    key={k.label}
-                    className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
-                  >
-                    <div className="text-[11px] font-extrabold uppercase tracking-wide text-slate-500">
-                      {k.label}
-                    </div>
-                    <div className="mt-2 text-xl font-extrabold tracking-tight text-slate-900">
-                      {k.value}
-                    </div>
-                    <div className="mt-1 text-sm text-slate-600">{k.sub}</div>
+                <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                  <div className="text-xs font-extrabold uppercase tracking-wide text-slate-500">
+                    What needs attention
                   </div>
-                ))}
-              </div>
-
-              <div className="mt-4 text-xs text-slate-500">
-                Indicators are normalized signals (0–100 display). Updates are
-                from public sources.
+                  <div className="mt-2 space-y-2">
+                    {weakest.length ? (
+                      weakest.map((s) => (
+                        <div
+                          key={s.key}
+                          className="flex items-center justify-between gap-3"
+                        >
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`h-2.5 w-2.5 rounded-full ${toneDot(
+                                s.score.tone
+                              )}`}
+                            />
+                            <div className="text-sm font-semibold text-slate-900">
+                              {s.label}
+                            </div>
+                          </div>
+                          <div className="text-sm font-extrabold text-slate-900">
+                            {s.score.n}
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-sm text-slate-600">
+                        No indicators yet.
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Focus areas strip (data-derived, unique per country) */}
-          <div className="mt-6 flex flex-wrap gap-2">
-            <span className="text-xs font-extrabold uppercase tracking-wide text-slate-500">
-              Focus areas:
-            </span>
-            {focus.focusAreas.slice(0, 6).map((x) => (
-              <span
-                key={x}
-                className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-800"
-              >
-                {x}
-              </span>
-            ))}
+            {/* right: decision cards */}
+            <div className="lg:col-span-5">
+              <div className="rounded-3xl border border-slate-200 bg-white/80 p-5 shadow-sm backdrop-blur">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="text-sm font-extrabold text-slate-900">
+                      Decision snapshot
+                    </div>
+                    <div className="mt-1 text-sm text-slate-600">
+                      Fast context for planning, scouting, and outreach.
+                    </div>
+                  </div>
+                  <div className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700">
+                    Updated: {latestDate}
+                  </div>
+                </div>
+
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  <MiniStat
+                    label="Primary focus"
+                    value={topSector}
+                    sub={
+                      focus.topSectors?.[0]
+                        ? `${focus.topSectors[0].count} listings tagged`
+                        : "Add sector tags"
+                    }
+                  />
+                  <MiniStat
+                    label="Stage momentum"
+                    value={topStage}
+                    sub={
+                      focus.topStages?.[0]
+                        ? `${focus.topStages[0].count} listings tagged`
+                        : "Add stage tags"
+                    }
+                  />
+                  <MiniStat
+                    label="Listings"
+                    value={String(projectsCount + startupsCount)}
+                    sub={`${projectsCount} projects • ${startupsCount} startups`}
+                  />
+                  <MiniStat
+                    label="Market mechanics"
+                    value={String(
+                      mechanics.buckets.filter((b) => b.items.length > 0).length
+                    )}
+                    sub={`${frameworksCount} frameworks • ${policiesCount} policies`}
+                  />
+                </div>
+
+                <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <div className="text-xs font-extrabold uppercase tracking-wide text-slate-500">
+                    Focus areas
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {focus.focusAreas.slice(0, 8).map((x) => (
+                      <span
+                        key={x}
+                        className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-800"
+                      >
+                        {x}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mt-4 text-xs text-slate-500">
+                  Indicators are normalized signals (0–100 display). Update
+                  links come from public sources.
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* 2-column body: Signals + Sidebar */}
-      <section className="grid gap-4 lg:grid-cols-3">
-        {/* Left (main) */}
-        <div className="space-y-4 lg:col-span-2">
-          {/* Signals */}
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+      {/* BODY: responsive layout */}
+      <section className="grid gap-4 lg:grid-cols-12">
+        {/* MAIN */}
+        <div className="space-y-4 lg:col-span-8">
+          {/* Readiness signals */}
+          <div
+            id="signals"
+            className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
+          >
             <div className="flex flex-wrap items-end justify-between gap-3">
               <div>
                 <h2 className="text-lg font-extrabold text-slate-900">
@@ -583,17 +731,16 @@ export default async function CountryBriefingPage({ params }) {
                   enabling conditions.
                 </p>
               </div>
-
               <Link
                 href="/countries"
                 className="text-sm font-semibold text-slate-900 underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500"
               >
-                Compare →
+                Compare countries →
               </Link>
             </div>
 
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              {scoredSignals.map((c) => (
+              {signals.all.map((c) => (
                 <div
                   key={c.key}
                   className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
@@ -617,7 +764,7 @@ export default async function CountryBriefingPage({ params }) {
 
                   <div className="mt-2 flex items-baseline gap-2">
                     <div className="text-3xl font-extrabold tracking-tight text-slate-950">
-                      {c.score ? c.score.text : "—"}
+                      {c.score ? c.score.n : "—"}
                     </div>
                     <div className="text-sm font-semibold text-slate-500">
                       / 100
@@ -638,43 +785,45 @@ export default async function CountryBriefingPage({ params }) {
             </div>
           </div>
 
-          {/* Market mechanics (THIS is what makes policies/frameworks valuable) */}
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          {/* Market mechanics */}
+          <div
+            id="mechanics"
+            className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
+          >
             <div className="flex flex-wrap items-end justify-between gap-3">
               <div>
                 <h2 className="text-lg font-extrabold text-slate-900">
                   Market mechanics
                 </h2>
                 <p className="mt-2 text-sm text-slate-600">
-                  The practical rules that determine how projects get built,
-                  contracted, connected, and financed.
+                  Not just “policies”: these are the levers that determine how
+                  projects get contracted, connected, and financed.
                 </p>
               </div>
-
               <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
                 {frameworksCount} frameworks • {policiesCount} policies
               </div>
             </div>
 
-            {/* “coverage insight” */}
             <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
               <span className="font-bold text-slate-900">Quick read: </span>
-              {mechanics.insights.presentCount >= 4 ? (
-                <>Strong coverage across multiple market mechanics.</>
-              ) : mechanics.insights.presentCount >= 2 ? (
-                <>Some key mechanics are defined; a few are still emerging.</>
-              ) : (
-                <>
-                  Mechanics coverage is limited — add more frameworks/policies
-                  for a clearer pathway.
-                </>
-              )}
-              {mechanics.insights.missingCount > 0 ? (
+              {mechanics.insight}
+              {mechanics.topBuckets.length ? (
                 <span className="text-slate-600">
                   {" "}
-                  Common missing areas:{" "}
+                  Strongest areas:{" "}
                   <span className="font-semibold text-slate-900">
-                    {mechanics.insights.missingTop.join(", ")}
+                    {mechanics.topBuckets.join(", ")}
+                  </span>
+                  .
+                </span>
+              ) : null}
+              {mechanics.missingTop.length ? (
+                <span className="text-slate-600">
+                  {" "}
+                  Missing coverage:{" "}
+                  <span className="font-semibold text-slate-900">
+                    {mechanics.missingTop.join(", ")}
                   </span>
                   .
                 </span>
@@ -701,71 +850,94 @@ export default async function CountryBriefingPage({ params }) {
                     </span>
                   </div>
 
-                  <div className="mt-4 space-y-3">
+                  <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
+                    <div className="text-[11px] font-extrabold uppercase tracking-wide text-slate-500">
+                      What this unlocks
+                    </div>
+                    <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-700">
+                      {b.unlocks.map((u) => (
+                        <li key={u}>{u}</li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="mt-4 space-y-2">
                     {b.items.length === 0 ? (
-                      <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600">
+                      <div className="rounded-xl border border-slate-200 bg-white p-3 text-sm text-slate-600">
                         No items recorded yet.
                         <div className="mt-1 text-xs text-slate-500">
-                          Add a framework/policy here to clarify execution
-                          pathways.
+                          Add 1–2 sourced entries here and the page becomes
+                          dramatically more credible.
                         </div>
                       </div>
                     ) : (
-                      b.items.slice(0, 3).map((it) => (
-                        <div
+                      b.items.slice(0, 4).map((it) => (
+                        <details
                           key={`${it.type}-${it.id}`}
-                          className="rounded-xl border border-slate-200 bg-white p-4"
+                          className="group rounded-xl border border-slate-200 bg-white p-4"
                         >
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="text-sm font-extrabold text-slate-900">
-                              {it.title}
+                          <summary className="cursor-pointer list-none">
+                            <div className="flex items-start justify-between gap-3">
+                              <div>
+                                <div className="text-sm font-extrabold text-slate-900">
+                                  {it.title}
+                                </div>
+                                <div className="mt-1 text-xs text-slate-500">
+                                  <span className="font-semibold text-slate-700">
+                                    {it.type === "framework"
+                                      ? "Framework"
+                                      : "Policy"}
+                                  </span>{" "}
+                                  <span className="text-slate-300">•</span>{" "}
+                                  <span className="font-mono">
+                                    {safeText(it.meta)}
+                                  </span>
+                                </div>
+                              </div>
+                              <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-extrabold text-slate-700">
+                                {safeText(it.status, "—")}
+                              </span>
                             </div>
-                            <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-extrabold text-slate-700">
-                              {safeText(it.status, "—")}
-                            </span>
-                          </div>
+                            <div className="mt-2 text-xs font-semibold text-slate-500 group-open:hidden">
+                              Expand →
+                            </div>
+                          </summary>
 
-                          <div className="mt-2 text-xs text-slate-500">
-                            <span className="font-semibold text-slate-700">
-                              {it.type === "framework" ? "Framework" : "Policy"}
-                            </span>{" "}
-                            <span className="text-slate-300">•</span>{" "}
-                            <span className="font-mono">
-                              {safeText(it.meta)}
-                            </span>
-                          </div>
-
-                          <p className="mt-2 text-sm text-slate-600">
-                            {safeText(it.desc, "No description provided.")}
-                          </p>
-
-                          {it.why ? (
-                            <p className="mt-3 text-sm text-slate-900">
-                              <span className="font-extrabold">Benefit:</span>{" "}
-                              {it.why}
+                          <div className="mt-3 space-y-3">
+                            <p className="text-sm text-slate-700">
+                              {safeText(it.desc, "No description provided.")}
                             </p>
-                          ) : null}
 
-                          {it.source ? (
-                            <div className="mt-2">
+                            {it.why ? (
+                              <p className="text-sm text-slate-900">
+                                <span className="font-extrabold">Benefit:</span>{" "}
+                                {it.why}
+                              </p>
+                            ) : null}
+
+                            {it.source ? (
                               <a
-                                className="text-sm font-semibold text-slate-900 underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500"
+                                className="inline-flex items-center text-sm font-semibold text-slate-900 underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500"
                                 href={it.source}
                                 target="_blank"
                                 rel="noreferrer"
                               >
-                                Source →
+                                Open source →
                               </a>
-                            </div>
-                          ) : null}
-                        </div>
+                            ) : (
+                              <div className="text-xs text-slate-500">
+                                Add a source URL to make this publish-grade.
+                              </div>
+                            )}
+                          </div>
+                        </details>
                       ))
                     )}
                   </div>
 
-                  {b.items.length > 3 ? (
-                    <div className="mt-3 text-xs text-slate-500">
-                      Showing 3 of {b.items.length}.
+                  {b.items.length > 4 ? (
+                    <div className="mt-2 text-xs text-slate-500">
+                      Showing 4 of {b.items.length}.
                     </div>
                   ) : null}
                 </div>
@@ -773,8 +945,11 @@ export default async function CountryBriefingPage({ params }) {
             </div>
           </div>
 
-          {/* Latest updates */}
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          {/* Recent signals */}
+          <div
+            id="signals-feed"
+            className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
+          >
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-lg font-extrabold text-slate-900">
                 Recent signals
@@ -846,24 +1021,25 @@ export default async function CountryBriefingPage({ params }) {
           </div>
         </div>
 
-        {/* Right sidebar */}
-        <aside className="space-y-4 lg:col-span-1">
-          {/* Ecosystem quick navigation */}
+        {/* SIDEBAR */}
+        <aside id="ecosystem" className="space-y-4 lg:col-span-4">
+          {/* Ecosystem navigation */}
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="text-xs font-extrabold uppercase tracking-wide text-slate-500">
               Ecosystem
             </div>
             <div className="mt-2 text-base font-extrabold text-slate-900">
-              Explore listings
+              Explore pipeline
             </div>
             <p className="mt-2 text-sm text-slate-600">
-              Navigate the active pipeline in {country.name}.
+              Browse active listings and use the matching system from project
+              pages.
             </p>
 
             <div className="mt-4 grid gap-2">
               <Link
                 href={`/projects?country_id=${country.id}`}
-                className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50"
+                className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-800"
               >
                 Projects ({projectsCount}) →
               </Link>
@@ -881,165 +1057,60 @@ export default async function CountryBriefingPage({ params }) {
               </Link>
             </div>
 
-            {/* Derived “top sectors” */}
-            <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <div className="text-xs font-extrabold uppercase tracking-wide text-slate-500">
-                Top sectors
-              </div>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {focus.topSectors.length ? (
-                  focus.topSectors.slice(0, 4).map((x) => (
-                    <span
-                      key={x.key}
-                      className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-800"
-                      title={`${x.count} listings`}
-                    >
-                      {x.key}
-                    </span>
-                  ))
-                ) : (
-                  <div className="text-sm text-slate-600">
-                    Add sector tags to listings to see focus areas here.
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Institutions (optional; renders if present) */}
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="text-xs font-extrabold uppercase tracking-wide text-slate-500">
-              Key institutions
-            </div>
-            <div className="mt-2 text-base font-extrabold text-slate-900">
-              Who shapes the market
-            </div>
-            <p className="mt-2 text-sm text-slate-600">
-              Reference points for regulation, planning, and grid access.
-            </p>
-
-            <div className="mt-4 space-y-3">
-              {institutions.length === 0 ? (
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-                  Add institutions (ministry, regulator, TSO) to make briefings
-                  more actionable.
+            {/* top sectors + stages */}
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <div className="text-xs font-extrabold uppercase tracking-wide text-slate-500">
+                  Top sectors
                 </div>
-              ) : (
-                institutions.slice(0, 6).map((i) => (
-                  <div
-                    key={i.id}
-                    className="rounded-2xl border border-slate-200 bg-white p-4"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="text-sm font-extrabold text-slate-900">
-                        {i.name}
-                      </div>
-                      <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-extrabold text-slate-700">
-                        {safeText(i.institution_type, "institution")}
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {focus.topSectors.length ? (
+                    focus.topSectors.slice(0, 6).map((x) => (
+                      <span
+                        key={x.key}
+                        className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-800"
+                        title={`${x.count} listings`}
+                      >
+                        {x.key}
                       </span>
+                    ))
+                  ) : (
+                    <div className="text-sm text-slate-600">
+                      Add sector tags to listings to surface focus areas.
                     </div>
-                    {i.description ? (
-                      <p className="mt-2 text-sm text-slate-600">
-                        {i.description}
-                      </p>
-                    ) : null}
-                    <div className="mt-2 flex flex-wrap gap-3 text-sm">
-                      {i.website ? (
-                        <a
-                          className="font-semibold text-slate-900 underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500"
-                          href={i.website}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          Website →
-                        </a>
-                      ) : null}
-                      {i.contact_email ? (
-                        <a
-                          className="font-semibold text-slate-900 underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500"
-                          href={`mailto:${i.contact_email}`}
-                        >
-                          Email →
-                        </a>
-                      ) : null}
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-
-          {/* Targets (optional; renders if present) */}
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="text-xs font-extrabold uppercase tracking-wide text-slate-500">
-              Targets & milestones
-            </div>
-            <div className="mt-2 text-base font-extrabold text-slate-900">
-              What the country is aiming for
-            </div>
-            <p className="mt-2 text-sm text-slate-600">
-              Useful for prioritization and alignment across projects and
-              capital.
-            </p>
-
-            <div className="mt-4 space-y-3">
-              {targets.length === 0 ? (
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-                  Add 2–5 official targets with sources for a
-                  “publication-ready” briefing.
+                  )}
                 </div>
-              ) : (
-                targets
-                  .slice()
-                  .sort((a, b) => (a.year || 0) - (b.year || 0))
-                  .slice(0, 6)
-                  .map((t) => (
-                    <div
-                      key={t.id}
-                      className="rounded-2xl border border-slate-200 bg-white p-4"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="text-sm font-extrabold text-slate-900">
-                          {t.title}
-                        </div>
-                        <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-extrabold text-slate-700">
-                          {t.year || "—"}
-                        </span>
-                      </div>
+              </div>
 
-                      <div className="mt-2 text-sm text-slate-700">
-                        <span className="font-extrabold text-slate-900">
-                          {safeText(t.value, "—")}
-                        </span>{" "}
-                        <span className="text-slate-500">{t.unit || ""}</span>
-                      </div>
-
-                      {t.notes ? (
-                        <p className="mt-2 text-sm text-slate-600">{t.notes}</p>
-                      ) : null}
-
-                      {t.source_url ? (
-                        <div className="mt-2">
-                          <a
-                            className="text-sm font-semibold text-slate-900 underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500"
-                            href={t.source_url}
-                            target="_blank"
-                            rel="noreferrer"
-                          >
-                            Source →
-                          </a>
-                        </div>
-                      ) : null}
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <div className="text-xs font-extrabold uppercase tracking-wide text-slate-500">
+                  Stage distribution
+                </div>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {focus.topStages.length ? (
+                    focus.topStages.slice(0, 6).map((x) => (
+                      <span
+                        key={x.key}
+                        className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-800"
+                        title={`${x.count} listings`}
+                      >
+                        {x.key}
+                      </span>
+                    ))
+                  ) : (
+                    <div className="text-sm text-slate-600">
+                      Add stage tags to make pipeline maturity visible.
                     </div>
-                  ))
-              )}
+                  )}
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Practical guidance (unique content already seeded) */}
+          {/* Practical guidance */}
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="text-xs font-extrabold uppercase tracking-wide text-slate-500">
-              Implementation guidance
+              Guidance
             </div>
             <div className="mt-2 text-base font-extrabold text-slate-900">
               What to focus on next
@@ -1070,6 +1141,23 @@ export default async function CountryBriefingPage({ params }) {
                 </p>
               </div>
             </div>
+          </div>
+
+          {/* Data transparency */}
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="text-xs font-extrabold uppercase tracking-wide text-slate-500">
+              Data notes
+            </div>
+            <div className="mt-2 text-sm text-slate-700">
+              The page gets dramatically stronger when policies/frameworks have
+              official sources and each country has enough real listings to make
+              patterns meaningful.
+            </div>
+            <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-slate-600">
+              <li>Add 10–20 real projects/startups per country</li>
+              <li>Add 1–2 official sources per policy/framework</li>
+              <li>Ensure consistent sector + stage tags across listings</li>
+            </ul>
           </div>
         </aside>
       </section>

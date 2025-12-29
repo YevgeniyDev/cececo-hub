@@ -28,6 +28,7 @@ SEED_COUNTRIES = [
 
 # kind, country_iso2, title, summary, sector, stage, website
 SEED_PROJECTS = [
+    # Original seed data
     ("project", "KZ", "Grid Flex Pilot", "Pilot to improve grid flexibility and demand response coordination.", "Grid", "pilot", None),
     ("project", "TR", "Rooftop Solar Acceleration", "Toolkit for rooftop PV rollout: permitting, financing, and standards.", "Solar", "scaling", None),
     ("project", "AZ", "Wind Resource Screening", "Nationwide screening of wind potential sites with simple feasibility scoring.", "Wind", "planning", None),
@@ -35,6 +36,35 @@ SEED_PROJECTS = [
     ("startup", "UZ", "AgriSolar", "Solar-powered irrigation + monitoring for farms and cooperatives.", "AgriTech", "seed", "https://example.com"),
     ("startup", "PK", "BatterySwap", "Swappable battery network for light EV fleets and last-mile delivery.", "Mobility", "pre-seed", None),
     ("startup", "KZ", "HeatSense", "Smart heat monitoring to cut losses in district heating and buildings.", "Efficiency", "seed", None),
+    # Türkiye (TR)
+    ("project", "TR", "Karapınar Solar Power Plant (Kalyon)", "Utility-scale solar mega-project in Konya; one of Türkiye's flagship PV builds.", "Solar", "operational", "https://kalyonpv.com"),
+    ("project", "TR", "YEKA Renewable Energy Auctions", "Government auction program that drives utility-scale renewable procurement and pipeline visibility.", "Policy/Market", "scaling", "https://enerji.gov.tr"),
+    ("startup", "TR", "ZES EV Charging (Enerjisa)", "Nationwide EV charging network expanding public charging access.", "Mobility", "scaling", "https://zes.net"),
+    ("startup", "TR", "Inavitas (wind analytics)", "Wind energy analytics and forecasting solutions (tech-enabled clean energy).", "Wind", "scaling", "https://inavitas.com"),
+    ("project", "TR", "Çanakkale Wind Developments (region cluster)", "Çanakkale region hosts multiple wind farms; useful for a 'wind cluster' project entry.", "Wind", "operational", None),
+    # Azerbaijan (AZ)
+    ("project", "AZ", "Garadagh Solar Power Plant (Masdar)", "~230 MW solar project near Baku; landmark renewable investment.", "Solar", "operational", "https://masdar.ae"),
+    ("project", "AZ", "Khizi-Absheron Wind Power Project (Masdar)", "Large wind development supporting Azerbaijan's diversification into renewables.", "Wind", "construction", "https://masdar.ae"),
+    ("project", "AZ", "Absheron Wind Resource Screening", "Countrywide wind site screening and early-stage pipeline building (turn into a 'planning project' entry with sources).", "Wind", "planning", None),
+    # Kazakhstan (KZ)
+    ("project", "KZ", "Ereymentau Wind Farm", "One of Kazakhstan's notable wind farms; useful for 'operational wind' reference.", "Wind", "operational", None),
+    ("project", "KZ", "Burnoye Solar Power Plant", "Utility-scale solar plant frequently referenced as early flagship solar in Kazakhstan.", "Solar", "operational", None),
+    ("project", "KZ", "Renewable Energy Auctions (Kazakhstan)", "Auction-based procurement pathway for renewables; anchor entry for policy→pipeline linkage.", "Policy/Market", "scaling", None),
+    ("startup", "KZ", "Qazaq Green / RE ecosystem group", "Ecosystem actor supporting renewables; can sit as a directory entry for credibility.", "Energy", "scaling", "https://qazaqgreen.kz"),
+    # Uzbekistan (UZ)
+    ("project", "UZ", "Navoi Solar Power Plant (Masdar)", "~100 MW project; first large-scale solar landmark helping build bankable pipeline.", "Solar", "operational", "https://masdar.ae"),
+    ("project", "UZ", "Zarafshan Wind Farm (ACWA Power)", "Major wind investment creating a flagship wind pipeline reference.", "Wind", "construction", "https://www.acwapower.com"),
+    ("project", "UZ", "Utility-Scale Solar Pipeline (EBRD/ADB tenders)", "Uzbekistan has been running/announcing solar tenders and IPP pipeline support.", "Solar", "scaling", None),
+    # Kyrgyzstan (KG)
+    ("project", "KG", "Kambar-Ata-1 Hydropower Project", "Large hydro project under development; major regional electricity and flexibility impact.", "Hydro", "planning", None),
+    ("project", "KG", "Toktogul HPP Rehabilitation (concept entry)", "Toktogul is Kyrgyzstan's key hydro asset; add a rehab/modernization project entry with sources you choose.", "Hydro", "scaling", None),
+    ("project", "KG", "Small Hydropower Modernization Program", "Small hydro upgrades (controls/monitoring/safety) are 'quick win' bankable interventions.", "Hydro", "pilot", None),
+    # Pakistan (PK)
+    ("project", "PK", "Quaid-e-Azam Solar Park", "Large solar park often referenced as Pakistan's flagship solar installation.", "Solar", "operational", None),
+    ("project", "PK", "Jhimpir Wind Corridor (cluster)", "Wind corridor with multiple wind farms; use as 'wind cluster' project entry.", "Wind", "operational", None),
+    ("startup", "PK", "Reon Energy", "Pakistani solar EPC and energy solutions company (good real ecosystem entry).", "Solar", "scaling", "https://reonenergy.com"),
+    ("startup", "PK", "SkyElectric", "Solar + storage solutions company; strong 'distributed resilience' story.", "Storage", "scaling", "https://skyelectric.com"),
+    ("startup", "PK", "Bykea (mobility electrification adjacency)", "Mobility platform (not pure energy); only include if you want 'transition' ecosystem breadth.", "Mobility", "scaling", "https://bykea.com"),
 ]
 
 SEED_INVESTORS = [
@@ -133,17 +163,21 @@ def seed_initial_data() -> None:
 
         if db.query(CountryPolicy).count() == 0:
             POL = [
-                # (iso2, type, status, title, summary, why)
-                ("TR", "target", "active", "Renewables Capacity Targets", "National targets to expand renewable generation capacity and reduce emissions.", "Signals long-term demand and policy intent; supports bankability."),
-                ("TR", "incentive", "active", "Solar Rooftop Support", "Support mechanisms for distributed rooftop PV adoption (curated MVP entry).", "Improves project economics for SMEs and households."),
-                ("KZ", "strategy", "active", "Clean Energy Transition Roadmap", "Roadmap focusing on renewables scale-up, grid modernization, and efficiency.", "Gives investors a planning signal and helps prioritize project types."),
-                ("KZ", "market_rule", "planned", "Grid Flexibility Market Pilots", "Planned pilots for demand response / flexibility services (curated MVP entry).", "Enables storage and demand response business models."),
-                ("PK", "regulation", "active", "Net Metering Rules (Distributed)", "Rules enabling small-scale distributed generation export (curated MVP entry).", "Unlocks rooftop solar deployment and SME participation."),
-                ("UZ", "target", "active", "National Renewable Expansion Plan", "Government plan to increase renewable share via utility-scale projects.", "Creates pipeline visibility; helps align investor interest."),
-                ("AZ", "strategy", "active", "Renewables Development Strategy", "Strategy to expand wind/solar and diversify generation mix.", "Signals priority sectors and target timelines."),
-                ("KG", "incentive", "planned", "Small Hydro Modernization Support", "Planned support for modernization and safety upgrades for small hydro assets.", "Supports quick-win projects with measurable impact."),
+                # (iso2, type, status, title, summary, why, source_url)
+                ("TR", "target", "active", "Renewables Capacity Targets", "National targets to expand renewable generation capacity and reduce emissions.", "Signals long-term demand and policy intent; supports bankability.", None),
+                ("TR", "incentive", "active", "Solar Rooftop Support", "Support mechanisms for distributed rooftop PV adoption (curated MVP entry).", "Improves project economics for SMEs and households.", None),
+                ("TR", "incentive", "active", "Renewable support mechanisms (overview)", "Türkiye's renewable support environment including market mechanisms.", "Investors need clarity on revenue mechanics and access paths.", "https://en.wikipedia.org/wiki/Renewable_energy_in_Turkey"),
+                ("KZ", "strategy", "active", "Clean Energy Transition Roadmap", "Roadmap focusing on renewables scale-up, grid modernization, and efficiency.", "Gives investors a planning signal and helps prioritize project types.", None),
+                ("KZ", "market_rule", "planned", "Grid Flexibility Market Pilots", "Planned pilots for demand response / flexibility services (curated MVP entry).", "Enables storage and demand response business models.", None),
+                ("PK", "regulation", "active", "Net Metering Rules (Distributed)", "Rules enabling small-scale distributed generation export (curated MVP entry).", "Unlocks rooftop solar deployment and SME participation.", None),
+                ("PK", "regulation", "active", "NEPRA Net Metering Regulations", "Distributed generation / net metering framework enabling rooftop PV export.", "Unlocks SME/household solar and distributed market growth.", "https://nepra.org.pk/publications/Net%20Metering%20Regulations-2015.pdf"),
+                ("UZ", "target", "active", "National Renewable Expansion Plan", "Government plan to increase renewable share via utility-scale projects.", "Creates pipeline visibility; helps align investor interest.", None),
+                ("AZ", "strategy", "active", "Renewables Development Strategy", "Strategy to expand wind/solar and diversify generation mix.", "Signals priority sectors and target timelines.", None),
+                ("AZ", "law/strategy", "active", "Azerbaijan renewable energy legal overview (Dentons)", "Legal/regulatory environment for renewables investment.", "Gives investors legal footing and contract expectations.", "https://www.dentons.com/en/insights/articles/2023/july/3/azerbaijan-renewable-energy"),
+                ("KG", "incentive", "planned", "Small Hydro Modernization Support", "Planned support for modernization and safety upgrades for small hydro assets.", "Supports quick-win projects with measurable impact.", None),
+                ("KG", "country_profile", "active", "IEA Kyrgyzstan energy profile", "Energy context and system characteristics relevant to reforms.", "Credible reference point for the market and constraints.", "https://www.iea.org/countries/kyrgyzstan"),
             ]
-            for iso2, ptype, status, title, summary, why in POL:
+            for iso2, ptype, status, title, summary, why, source_url in POL:
                 c = iso2_to_country.get(iso2)
                 if not c:
                     continue
@@ -154,22 +188,25 @@ def seed_initial_data() -> None:
                     title=title,
                     summary=summary,
                     why_it_matters=why,
-                    source_url=None,
+                    source_url=source_url,
                 ))
             db.commit()
 
         if db.query(CountryFramework).count() == 0:
             FW = [
-                # (iso2, type, status, name, desc, why)
-                ("TR", "auction", "active", "Renewable Auctions", "Competitive procurement mechanism for utility-scale renewables (curated MVP entry).", "Improves price discovery and project bankability."),
-                ("TR", "ppa", "active", "PPA Contracting (Corporate/Utility)", "Framework for power purchase agreements (curated MVP entry).", "PPAs reduce revenue risk and attract private capital."),
-                ("KZ", "grid_code", "active", "Grid Connection Code", "Technical grid connection rules and compliance requirements (curated MVP entry).", "Reduces integration uncertainty for developers."),
-                ("PK", "net_metering", "active", "Net Metering Framework", "Defines eligibility, metering, and export settlement for distributed PV.", "Directly enables rooftop solar projects."),
-                ("UZ", "auction", "planned", "Renewable Auction Program", "Planned program for scaling utility-scale renewables via auctions.", "Signals future pipeline and procurement path."),
-                ("AZ", "ppa", "planned", "PPA Standardization", "Work towards standardized PPAs for renewables (curated MVP entry).", "Standard contracts reduce legal friction."),
-                ("KG", "efficiency_standard", "planned", "Efficiency Standards (Buildings)", "Planned minimum efficiency requirements / standards (curated MVP entry).", "Creates steady demand for efficiency solutions."),
+                # (iso2, type, status, name, desc, why, source_url)
+                ("TR", "auction", "active", "Renewable Auctions", "Competitive procurement mechanism for utility-scale renewables (curated MVP entry).", "Improves price discovery and project bankability.", None),
+                ("TR", "auction", "active", "YEKA Renewable Auctions", "Competitive procurement program for utility-scale solar/wind.", "Creates bankable pipeline and standardizes procurement.", "https://enerji.gov.tr"),
+                ("TR", "ppa", "active", "PPA Contracting (Corporate/Utility)", "Framework for power purchase agreements (curated MVP entry).", "PPAs reduce revenue risk and attract private capital.", None),
+                ("KZ", "grid_code", "active", "Grid Connection Code", "Technical grid connection rules and compliance requirements (curated MVP entry).", "Reduces integration uncertainty for developers.", None),
+                ("KZ", "auction", "active", "Kazakhstan RE Auctions (EBRD-supported)", "Auction-based renewable procurement used for pipeline buildout.", "Clear procurement path = credible project development.", "https://www.ebrd.com/work-with-us/projects/psd/kazakhstan-renewable-energy-auctions.html"),
+                ("PK", "net_metering", "active", "Net Metering Framework", "Defines eligibility, metering, and export settlement for distributed PV.", "Directly enables rooftop solar projects.", None),
+                ("UZ", "auction", "planned", "Renewable Auction Program", "Planned program for scaling utility-scale renewables via auctions.", "Signals future pipeline and procurement path.", None),
+                ("UZ", "auction", "planned", "Uzbekistan Solar Development / tenders (EBRD)", "Program support and project pipeline for utility-scale solar.", "Signals repeatable pathway for IPPs and capital deployment.", "https://www.ebrd.com/work-with-us/projects/psd/uzbekistan-solar-development.html"),
+                ("AZ", "ppa", "planned", "PPA Standardization", "Work towards standardized PPAs for renewables (curated MVP entry).", "Standard contracts reduce legal friction.", None),
+                ("KG", "efficiency_standard", "planned", "Efficiency Standards (Buildings)", "Planned minimum efficiency requirements / standards (curated MVP entry).", "Creates steady demand for efficiency solutions.", None),
             ]
-            for iso2, ftype, status, name, desc, why in FW:
+            for iso2, ftype, status, name, desc, why, source_url in FW:
                 c = iso2_to_country.get(iso2)
                 if not c:
                     continue
@@ -180,7 +217,7 @@ def seed_initial_data() -> None:
                     name=name,
                     description=desc,
                     why_it_matters=why,
-                    source_url=None,
+                    source_url=source_url,
                 ))
             db.commit()
 
