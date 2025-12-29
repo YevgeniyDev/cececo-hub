@@ -5,11 +5,20 @@ const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE ||
   "http://localhost:8000";
 
+/* ----------------------------- helpers ----------------------------- */
+function clamp01(v) {
+  const n = Number(v);
+  if (Number.isNaN(n)) return null;
+  return Math.max(0, Math.min(1, n));
+}
+
 function scoreLabel(v) {
-  const n = Math.round(v * 100);
-  if (n >= 70) return { text: `${n}/100`, tone: "high", label: "High" };
-  if (n >= 50) return { text: `${n}/100`, tone: "med", label: "Medium" };
-  return { text: `${n}/100`, tone: "low", label: "Low" };
+  const vv = clamp01(v);
+  if (vv === null) return null;
+  const n = Math.round(vv * 100);
+  if (n >= 70) return { text: `${n}/100`, tone: "high", label: "Strong" };
+  if (n >= 50) return { text: `${n}/100`, tone: "med", label: "Moderate" };
+  return { text: `${n}/100`, tone: "low", label: "Early" };
 }
 
 function tonePill(tone) {
@@ -19,6 +28,26 @@ function tonePill(tone) {
   return "border-rose-200 bg-rose-50 text-rose-700";
 }
 
+function formatDate(iso) {
+  try {
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return "—";
+    return new Intl.DateTimeFormat("en", {
+      year: "numeric",
+      month: "short",
+      day: "2-digit",
+    }).format(d);
+  } catch {
+    return "—";
+  }
+}
+
+function safeText(v, fallback = "—") {
+  const s = typeof v === "string" ? v.trim() : "";
+  return s.length ? s : fallback;
+}
+
+/* ----------------------------- data fetch ----------------------------- */
 async function getCountry(id) {
   const res = await fetch(`${API_BASE}/api/v1/countries/${id}`, {
     cache: "no-store",
@@ -38,6 +67,7 @@ async function getCountries() {
 async function getNews(countryId) {
   const params = new URLSearchParams();
   params.set("country_id", String(countryId));
+  // Note: backend currently ignores limit/offset, but keep for future pagination
   params.set("limit", "20");
   params.set("offset", "0");
   const res = await fetch(`${API_BASE}/api/v1/news?${params.toString()}`, {
@@ -47,6 +77,7 @@ async function getNews(countryId) {
   return res.json();
 }
 
+/* ----------------------------- page ----------------------------- */
 export default async function CountryBriefingPage({ params }) {
   const [country, countries, news] = await Promise.all([
     getCountry(params.id),
@@ -76,18 +107,58 @@ export default async function CountryBriefingPage({ params }) {
   const newsItems = news?.items || news || [];
   const topNews = newsItems.slice(0, 6);
 
-  return (
-    <div className="space-y-6">
-      {/* NAV */}
-      <div className="flex items-center justify-between gap-3">
-        <Link
-          href="/countries"
-          className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50"
-        >
-          ← All countries
-        </Link>
+  const frameworksCount = (country.frameworks || []).length;
+  const policiesCount = (country.policies || []).length;
+  const updatesCount = newsItems.length;
 
-        {/* Previous/Next buttons on the right */}
+  const kpiCards = [
+    { label: "Updates", value: String(updatesCount), sub: "Recent signals" },
+    {
+      label: "Frameworks",
+      value: String(frameworksCount),
+      sub: "Regulatory context",
+    },
+    { label: "Plans", value: String(policiesCount), sub: "Actions & programs" },
+    { label: "Ecosystem", value: "Explore", sub: "Projects & capital" },
+  ];
+
+  const snapshotCards = [
+    ["Policy readiness", "policy_readiness", "Policy clarity and direction."],
+    [
+      "Investment attractiveness",
+      "investment_attractiveness",
+      "Signals relevant to capital deployment.",
+    ],
+    [
+      "Renewable potential",
+      "renewable_proxy",
+      "Proxy view of resource and scale.",
+    ],
+    [
+      "Efficiency opportunity",
+      "efficiency_need",
+      "Where demand-side gains are likely.",
+    ],
+    ["Grid readiness", "grid_proxy", "Enablers for integration and growth."],
+  ];
+
+  return (
+    <div className="space-y-8">
+      {/* Top navigation */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <Link
+            href="/countries"
+            className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50"
+          >
+            ← Countries
+          </Link>
+
+          <span className="hidden sm:inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600">
+            Country briefing
+          </span>
+        </div>
+
         <div className="flex items-center gap-2">
           {prevId ? (
             <Link
@@ -123,75 +194,152 @@ export default async function CountryBriefingPage({ params }) {
         </div>
       </div>
 
-      {/* header */}
-      <div className="space-y-4">
-        <div className="flex flex-wrap gap-2">
-          <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700">
-            Knowledge hub
-          </span>
-          <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700">
-            Regulatory frameworks
-          </span>
-          <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700">
-            Curated indicators
-          </span>
+      {/* Hero */}
+      <section className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+        {/* background */}
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute -left-28 -top-28 h-80 w-80 rounded-full bg-blue-500/10 blur-3xl" />
+          <div className="absolute -right-28 top-10 h-80 w-80 rounded-full bg-emerald-500/10 blur-3xl" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(59,130,246,0.10),transparent_45%),radial-gradient(circle_at_85%_25%,rgba(16,185,129,0.10),transparent_45%)]" />
         </div>
 
-        <h1 className="text-4xl font-extrabold tracking-tight">
-          {country.name} <span className="text-slate-300">—</span>{" "}
-          <span className="text-slate-400">Briefing</span>
-        </h1>
+        <div className="relative p-7 md:p-10">
+          <div className="flex flex-wrap gap-2">
+            <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700">
+              Readiness signals
+            </span>
+            <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700">
+              Policy context
+            </span>
+            <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700">
+              Ecosystem navigation
+            </span>
+            <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700">
+              Live updates
+            </span>
+          </div>
 
-        {/* Action buttons under country name */}
-        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+          <div className="mt-6 grid gap-8 lg:grid-cols-2 lg:items-center">
+            {/* Left */}
+            <div>
+              <h1 className="text-4xl font-extrabold tracking-tight text-slate-950 md:text-5xl">
+                {country.name}
+              </h1>
+
+              <p className="mt-3 max-w-2xl text-base leading-7 text-slate-700">
+                A compact, decision-friendly view of clean-energy readiness,
+                policy signals, and market activity — designed to help teams
+                move from context to action.
+              </p>
+
+              <div className="mt-6 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+                <Link
+                  href={`/news?country_id=${country.id}`}
+                  className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-slate-800"
+                >
+                  View updates →
+                </Link>
+                <Link
+                  href={`/projects?country_id=${country.id}`}
+                  className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50"
+                >
+                  Projects
+                </Link>
+                <Link
+                  href={`/startups?country_id=${country.id}`}
+                  className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50"
+                >
+                  Startups
+                </Link>
+                <Link
+                  href={`/investors?country_id=${country.id}`}
+                  className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50"
+                >
+                  Investors
+                </Link>
+              </div>
+
+              <div className="mt-5 text-xs text-slate-500">
+                Data sources: country indicators and summaries are curated;
+                update links are fetched from public news sources via GDELT.
+              </div>
+            </div>
+
+            {/* Right: KPIs / quick stats */}
+            <div className="rounded-3xl border border-slate-200 bg-white/70 p-5 shadow-sm backdrop-blur-sm">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className="text-sm font-extrabold text-slate-900">
+                    At a glance
+                  </div>
+                  <div className="mt-1 text-sm text-slate-600">
+                    Signals, context, and pathways to explore.
+                  </div>
+                </div>
+                <div className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700">
+                  Updated:{" "}
+                  {topNews[0]?.published_at
+                    ? formatDate(topNews[0].published_at)
+                    : "—"}
+                </div>
+              </div>
+
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                {kpiCards.map((k) => (
+                  <div
+                    key={k.label}
+                    className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+                  >
+                    <div className="text-xs font-extrabold uppercase tracking-wide text-slate-500">
+                      {k.label}
+                    </div>
+                    <div className="mt-2 text-2xl font-extrabold tracking-tight text-slate-900">
+                      {k.value}
+                    </div>
+                    <div className="mt-1 text-sm text-slate-600">{k.sub}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <div className="text-xs font-extrabold uppercase tracking-wide text-slate-500">
+                  Snapshot
+                </div>
+                <div className="mt-2 text-sm text-slate-700">
+                  {safeText(
+                    country.briefing,
+                    "Country overview will appear here once added."
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Snapshot scores */}
+      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-extrabold text-slate-900">
+              Clean Energy Snapshot
+            </h2>
+            <p className="mt-2 max-w-3xl text-sm text-slate-600">
+              A consistent set of signals to compare readiness, opportunity, and
+              enabling conditions across the region.
+            </p>
+          </div>
+
           <Link
-            href={`/news?country_id=${country.id}`}
-            className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-slate-800"
+            href="/countries"
+            className="text-sm font-semibold text-slate-900 underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500"
           >
-            Updates →
-          </Link>
-          <Link
-            href={`/projects?country_id=${country.id}`}
-            className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50"
-          >
-            Projects →
-          </Link>
-          <Link
-            href={`/startups?country_id=${country.id}`}
-            className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50"
-          >
-            Startups →
-          </Link>
-          <Link
-            href={`/investors?country_id=${country.id}`}
-            className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50"
-          >
-            Investors →
+            Compare countries →
           </Link>
         </div>
-
-        <p className="max-w-3xl text-sm text-slate-600">
-          MVP briefing with curated indicators and policy/framework summaries.
-          Production version connects to public datasets and official sources.
-        </p>
-      </div>
-
-      {/* Snapshot */}
-      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-lg font-extrabold">Clean Energy Snapshot</h2>
-        <p className="mt-2 max-w-4xl text-sm text-slate-600">
-          {country.briefing ||
-            "No briefing text yet (seed this country narrative)."}
-        </p>
 
         <div className="mt-5 grid gap-3 md:grid-cols-2 lg:grid-cols-5">
-          {[
-            ["Policy readiness", "policy_readiness"],
-            ["Investment attractiveness", "investment_attractiveness"],
-            ["Renewable potential", "renewable_proxy"],
-            ["Efficiency opportunity", "efficiency_need"],
-            ["Grid readiness", "grid_proxy"],
-          ].map(([label, key]) => {
+          {snapshotCards.map(([label, key, hint]) => {
             const it = ind[key];
             const s = it ? scoreLabel(it.value) : null;
 
@@ -200,7 +348,7 @@ export default async function CountryBriefingPage({ params }) {
                 key={key}
                 className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
               >
-                <div className="flex items-center justify-between gap-2">
+                <div className="flex items-start justify-between gap-2">
                   <div className="text-xs font-bold text-slate-700">
                     {label}
                   </div>
@@ -210,18 +358,19 @@ export default async function CountryBriefingPage({ params }) {
                         "rounded-full border px-2 py-1 text-[11px] font-extrabold",
                         tonePill(s.tone),
                       ].join(" ")}
+                      title={s.label}
                     >
                       {s.label}
                     </span>
                   ) : null}
                 </div>
 
-                <div className="mt-2 text-2xl font-extrabold tracking-tight">
+                <div className="mt-2 text-2xl font-extrabold tracking-tight text-slate-900">
                   {s ? s.text : "—"}
                 </div>
 
                 <div className="mt-2 text-sm text-slate-600">
-                  {it?.details || "Curated MVP (transparent)."}
+                  {it?.details ? it.details : hint}
                 </div>
               </div>
             );
@@ -229,38 +378,42 @@ export default async function CountryBriefingPage({ params }) {
         </div>
       </section>
 
-      {/* Latest updates + Signals */}
+      {/* Updates + Policy/Regulatory */}
       <section className="grid gap-4 lg:grid-cols-3">
         {/* Latest updates */}
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm lg:col-span-1">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-lg font-extrabold">Latest updates</h2>
+            <h2 className="text-lg font-extrabold text-slate-900">
+              Latest updates
+            </h2>
             <Link
               href={`/news?country_id=${country.id}`}
-              className="text-sm font-semibold text-slate-900 underline underline-offset-4 hover:opacity-80"
+              className="text-sm font-semibold text-slate-900 underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500"
             >
               View all →
             </Link>
           </div>
 
           <p className="mt-2 text-sm text-slate-600">
-            Approved updates related to policies, regulations, projects, and
-            achievements.
+            Recent policy and market signals relevant to clean energy.
           </p>
 
           <div className="mt-4 space-y-3">
             {topNews.length === 0 ? (
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-                No approved news items yet.
+                No updates found yet for this country.
+                <div className="mt-2 text-xs text-slate-500">
+                  Tip: try “Live updates” in the top navigation and search.
+                </div>
               </div>
             ) : (
               topNews.map((n) => (
-                <div
+                <article
                   key={n.id}
                   className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
                 >
                   <div className="flex items-start justify-between gap-3">
-                    <div className="text-sm font-extrabold leading-snug">
+                    <div className="text-sm font-extrabold leading-snug text-slate-900 line-clamp-2">
                       {n.title}
                     </div>
                     <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-extrabold text-slate-700">
@@ -272,36 +425,61 @@ export default async function CountryBriefingPage({ params }) {
                     <span className="font-semibold text-slate-800">Type:</span>{" "}
                     <span className="font-mono">{n.impact_type}</span>{" "}
                     <span className="text-slate-300">•</span>{" "}
-                    {new Date(n.published_at).toLocaleDateString()}
+                    {formatDate(n.published_at)}
                   </div>
 
-                  <p className="mt-2 text-sm text-slate-600">{n.summary}</p>
+                  <p className="mt-2 text-sm text-slate-600 line-clamp-3">
+                    {safeText(n.summary, "No summary available.")}
+                  </p>
 
                   {n.source_url ? (
                     <div className="mt-2">
                       <a
-                        className="text-sm font-semibold text-slate-900 underline underline-offset-4 hover:opacity-80"
+                        className="text-sm font-semibold text-slate-900 underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500"
                         href={n.source_url}
                         target="_blank"
                         rel="noreferrer"
                       >
-                        Source →
+                        Open source →
                       </a>
                     </div>
                   ) : null}
-                </div>
+                </article>
               ))
             )}
           </div>
         </div>
 
-        {/* Regulatory & Policy Signals */}
+        {/* Regulatory & Policy */}
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm lg:col-span-2">
-          <h2 className="text-lg font-extrabold">
-            Regulatory & Policy Signals
-          </h2>
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-extrabold text-slate-900">
+                Policy & regulatory context
+              </h2>
+              <p className="mt-2 max-w-3xl text-sm text-slate-600">
+                The key instruments and plans that shape the market environment,
+                plus short “why it matters” notes for quick review.
+              </p>
+            </div>
 
-          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            <div className="flex flex-wrap gap-2">
+              <Link
+                href={`/projects?country_id=${country.id}`}
+                className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50"
+              >
+                See projects →
+              </Link>
+              <Link
+                href={`/investors?country_id=${country.id}`}
+                className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50"
+              >
+                Find investors →
+              </Link>
+            </div>
+          </div>
+
+          <div className="mt-5 grid gap-4 md:grid-cols-2">
             {/* Frameworks */}
             <div>
               <div className="text-xs font-extrabold uppercase tracking-wide text-slate-500">
@@ -309,9 +487,9 @@ export default async function CountryBriefingPage({ params }) {
               </div>
 
               <div className="mt-3 space-y-3">
-                {(country.frameworks || []).length === 0 ? (
+                {frameworksCount === 0 ? (
                   <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-                    No frameworks seeded yet.
+                    No frameworks added yet.
                   </div>
                 ) : (
                   country.frameworks.map((f) => (
@@ -320,9 +498,11 @@ export default async function CountryBriefingPage({ params }) {
                       className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
                     >
                       <div className="flex items-start justify-between gap-3">
-                        <div className="text-sm font-extrabold">{f.name}</div>
+                        <div className="text-sm font-extrabold text-slate-900">
+                          {f.name}
+                        </div>
                         <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-extrabold text-slate-700">
-                          {f.status}
+                          {safeText(f.status, "—")}
                         </span>
                       </div>
 
@@ -330,11 +510,11 @@ export default async function CountryBriefingPage({ params }) {
                         <span className="font-semibold text-slate-800">
                           Type:
                         </span>{" "}
-                        {f.framework_type}
+                        {safeText(f.framework_type)}
                       </div>
 
                       <p className="mt-2 text-sm text-slate-600">
-                        {f.description}
+                        {safeText(f.description, "No description provided.")}
                       </p>
 
                       {f.why_it_matters ? (
@@ -349,7 +529,7 @@ export default async function CountryBriefingPage({ params }) {
                       {f.source_url ? (
                         <div className="mt-2">
                           <a
-                            className="text-sm font-semibold text-slate-900 underline underline-offset-4 hover:opacity-80"
+                            className="text-sm font-semibold text-slate-900 underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500"
                             href={f.source_url}
                             target="_blank"
                             rel="noreferrer"
@@ -367,13 +547,13 @@ export default async function CountryBriefingPage({ params }) {
             {/* Policies */}
             <div>
               <div className="text-xs font-extrabold uppercase tracking-wide text-slate-500">
-                Policies / Action Plans
+                Policies / action plans
               </div>
 
               <div className="mt-3 space-y-3">
-                {(country.policies || []).length === 0 ? (
+                {policiesCount === 0 ? (
                   <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-                    No policies seeded yet.
+                    No policies added yet.
                   </div>
                 ) : (
                   country.policies.map((p) => (
@@ -382,9 +562,11 @@ export default async function CountryBriefingPage({ params }) {
                       className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
                     >
                       <div className="flex items-start justify-between gap-3">
-                        <div className="text-sm font-extrabold">{p.title}</div>
+                        <div className="text-sm font-extrabold text-slate-900">
+                          {p.title}
+                        </div>
                         <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-extrabold text-slate-700">
-                          {p.status}
+                          {safeText(p.status, "—")}
                         </span>
                       </div>
 
@@ -392,10 +574,12 @@ export default async function CountryBriefingPage({ params }) {
                         <span className="font-semibold text-slate-800">
                           Type:
                         </span>{" "}
-                        {p.policy_type}
+                        {safeText(p.policy_type)}
                       </div>
 
-                      <p className="mt-2 text-sm text-slate-600">{p.summary}</p>
+                      <p className="mt-2 text-sm text-slate-600">
+                        {safeText(p.summary, "No summary provided.")}
+                      </p>
 
                       {p.why_it_matters ? (
                         <p className="mt-3 text-sm text-slate-900">
@@ -409,7 +593,7 @@ export default async function CountryBriefingPage({ params }) {
                       {p.source_url ? (
                         <div className="mt-2">
                           <a
-                            className="text-sm font-semibold text-slate-900 underline underline-offset-4 hover:opacity-80"
+                            className="text-sm font-semibold text-slate-900 underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500"
                             href={p.source_url}
                             target="_blank"
                             rel="noreferrer"
@@ -428,19 +612,44 @@ export default async function CountryBriefingPage({ params }) {
       </section>
 
       {/* Potential + guidance */}
-      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-lg font-extrabold">
-          Clean Energy Potential & Implementation Guidance
-        </h2>
+      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-extrabold text-slate-900">
+              Potential & implementation guidance
+            </h2>
+            <p className="mt-2 max-w-3xl text-sm text-slate-600">
+              A practical “what to focus on” section for teams planning policy,
+              programs, pilots, or market entry.
+            </p>
+          </div>
 
-        <div className="mt-4 grid gap-4 md:grid-cols-2">
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href={`/startups?country_id=${country.id}`}
+              className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50"
+            >
+              Explore startups →
+            </Link>
+            <Link
+              href={`/investors?country_id=${country.id}`}
+              className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50"
+            >
+              Explore investors →
+            </Link>
+          </div>
+        </div>
+
+        <div className="mt-5 grid gap-4 md:grid-cols-2">
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <div className="text-xs font-extrabold uppercase tracking-wide text-slate-500">
               Potential & priorities
             </div>
             <p className="mt-2 text-sm text-slate-600">
-              {country.potential_notes ||
-                "No potential notes yet (seed this narrative)."}
+              {safeText(
+                country.potential_notes,
+                "Add a short paragraph describing the most promising clean-energy opportunities and priority sectors."
+              )}
             </p>
           </div>
 
@@ -449,8 +658,10 @@ export default async function CountryBriefingPage({ params }) {
               What works right now
             </div>
             <p className="mt-2 text-sm text-slate-600">
-              {country.action_plan_notes ||
-                "No action guidance yet (seed this narrative)."}
+              {safeText(
+                country.action_plan_notes,
+                "Add actionable guidance: near-term steps, enabling reforms, and implementation considerations."
+              )}
             </p>
           </div>
         </div>
