@@ -24,10 +24,6 @@ export default function RootLayout({ children }) {
                   Clean energy intelligence
                 </div>
               </div>
-
-              <span className="ml-2 rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-bold text-slate-600">
-                MVP
-              </span>
             </a>
 
             {/* Nav (RIGHT) */}

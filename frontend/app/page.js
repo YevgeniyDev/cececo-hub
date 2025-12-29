@@ -21,16 +21,16 @@ export default function Home() {
           {/* Top badges */}
           <div className="flex flex-wrap gap-2">
             <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700">
-              CECECO knowledge hub
+              Regional clean-energy intelligence
             </span>
             <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700">
-              Data-driven decision support
+              Policy + market signals
             </span>
             <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700">
-              Startup ↔ Investor matching
+              Projects, startups, investors
             </span>
             <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700">
-              Live clean-energy updates (GDELT)
+              Live updates (GDELT)
             </span>
           </div>
 
@@ -38,18 +38,24 @@ export default function Home() {
             {/* Left */}
             <div>
               <h1 className="text-4xl font-extrabold tracking-tight text-slate-950 md:text-5xl">
-                A digital clean-energy hub built for CECECO’s hackathon goals
+                Make clean-energy decisions with speed and confidence
               </h1>
 
               <p className="mt-4 max-w-xl text-base leading-7 text-slate-700">
-                CECECO Hub is a regional platform that turns scattered
-                clean-energy information into{" "}
+                CECECO Hub brings together{" "}
                 <span className="font-semibold text-slate-900">
-                  actionable insight
+                  country context
                 </span>
-                : country readiness signals, policy context, project/startup
-                pipelines, investor discovery, and explainable matching — backed
-                by live news monitoring.
+                ,{" "}
+                <span className="font-semibold text-slate-900">
+                  ecosystem discovery
+                </span>
+                , and{" "}
+                <span className="font-semibold text-slate-900">
+                  explainable matching
+                </span>{" "}
+                — so policymakers, founders, and investors can move from
+                discovery to action faster.
               </p>
 
               <div className="mt-6 flex flex-wrap gap-3">
@@ -74,22 +80,21 @@ export default function Home() {
               </div>
 
               <div className="mt-5 text-xs text-slate-500">
-                Transparency note: country indicators are curated in the MVP
-                (methodology shown). News is fetched from public sources via
-                GDELT and may include global items filtered by relevance.
+                Data note: live news links are fetched from public sources via
+                GDELT. Country indicators are designed to be transparent and
+                replaceable with official datasets.
               </div>
             </div>
 
-            {/* Right panel: "Why this fits the hackathon" */}
+            {/* Right panel: quick product overview */}
             <div className="rounded-3xl border border-slate-200 bg-white/70 p-5 shadow-sm backdrop-blur-sm">
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <div className="text-sm font-extrabold text-slate-900">
-                    Why CECECO Hub fits the call
+                    What you can do in a minute
                   </div>
                   <div className="mt-1 text-sm text-slate-600">
-                    Built exactly under “Data for Policy, Planning &
-                    Implementation”
+                    Explore → shortlist → validate
                   </div>
                 </div>
                 <a
@@ -105,65 +110,60 @@ export default function Home() {
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 <div className="rounded-2xl border border-slate-200 bg-white p-4">
                   <div className="text-xs font-extrabold uppercase tracking-wide text-slate-500">
-                    Hackathon objective
+                    Countries
                   </div>
                   <div className="mt-2 text-sm font-semibold text-slate-900">
-                    Raise awareness + clarity
+                    Readiness + policy context
                   </div>
                   <div className="mt-1 text-sm text-slate-600">
-                    Makes clean-energy progress visible: indicators + policies +
-                    updates in one place.
+                    Compare signals, frameworks, and updates per country.
                   </div>
                 </div>
 
                 <div className="rounded-2xl border border-slate-200 bg-white p-4">
                   <div className="text-xs font-extrabold uppercase tracking-wide text-slate-500">
-                    Hackathon objective
+                    Directory
                   </div>
                   <div className="mt-2 text-sm font-semibold text-slate-900">
-                    Data-driven solutions
+                    Projects & ecosystem
                   </div>
                   <div className="mt-1 text-sm text-slate-600">
-                    Queryable country dashboards + filterable ecosystem
-                    directory for real decisions.
+                    Filterable lists built for real evaluation workflows.
                   </div>
                 </div>
 
                 <div className="rounded-2xl border border-slate-200 bg-white p-4">
                   <div className="text-xs font-extrabold uppercase tracking-wide text-slate-500">
-                    Hackathon theme
+                    Matching
                   </div>
                   <div className="mt-2 text-sm font-semibold text-slate-900">
-                    Data for policy & planning
+                    Explainable scoring (0–100)
                   </div>
                   <div className="mt-1 text-sm text-slate-600">
-                    Country readiness signals + policy context to support
-                    implementation planning.
+                    Country, sector, stage — with reasons and breakdown.
                   </div>
                 </div>
 
                 <div className="rounded-2xl border border-slate-200 bg-white p-4">
                   <div className="text-xs font-extrabold uppercase tracking-wide text-slate-500">
-                    Hackathon theme
+                    Updates
                   </div>
                   <div className="mt-2 text-sm font-semibold text-slate-900">
-                    Startup ↔ investor portal
+                    Live news monitoring
                   </div>
                   <div className="mt-1 text-sm text-slate-600">
-                    Explainable matching (0–100) with reasons: country, sector,
-                    stage.
+                    Search + country filters with click-through sources.
                   </div>
                 </div>
               </div>
 
               <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
                 <div className="text-xs font-extrabold uppercase tracking-wide text-slate-500">
-                  “60-second demo” flow
+                  Built for trust
                 </div>
                 <div className="mt-2 text-sm text-slate-700">
-                  Pick a country → review readiness & policy signals → open a
-                  project/startup → see top investor matches with a transparent
-                  score breakdown.
+                  Structured models, stable APIs, and a data layer designed for
+                  ingestion, moderation, and scale.
                 </div>
               </div>
             </div>
@@ -171,90 +171,79 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ALIGNMENT STRIP: objectives + what the platform delivers */}
-      <section className="rounded-3xl border border-slate-200 bg-white p-7 shadow-sm md:p-10">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <h2 className="text-2xl font-extrabold tracking-tight text-slate-950">
-              Direct alignment with the hackathon objectives
-            </h2>
-            <p className="mt-2 max-w-3xl text-sm text-slate-600">
-              This platform is designed to be useful to policymakers, startups,
-              investors, and youth teams — not just a directory.
-            </p>
+      {/* VALUE STRIP */}
+      <section className="grid gap-4 lg:grid-cols-3">
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="text-xs font-extrabold uppercase tracking-wide text-slate-500">
+            Clarity
           </div>
-
-          <div className="flex flex-wrap gap-2">
-            <a
-              href="/news"
-              className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50"
-            >
-              View live news
-            </a>
-            <a
-              href="/investors"
-              className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50"
-            >
-              Browse investors
-            </a>
+          <div className="mt-2 text-base font-bold text-slate-900">
+            One place for context
           </div>
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            Replace fragmented spreadsheets and scattered links with structured,
+            comparable country briefings and ecosystem views.
+          </p>
         </div>
 
-        <div className="mt-7 grid gap-4 md:grid-cols-3">
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-            <div className="text-xs font-extrabold uppercase tracking-wide text-slate-500">
-              Objective 1
-            </div>
-            <div className="mt-2 text-base font-bold text-slate-900">
-              Public awareness of clean energy
-            </div>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
-              A single regional hub with country pages and live updates makes
-              the transition tangible and trackable — per country and across the
-              region.
-            </p>
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="text-xs font-extrabold uppercase tracking-wide text-slate-500">
+            Decision support
           </div>
+          <div className="mt-2 text-base font-bold text-slate-900">
+            Explainable evaluation
+          </div>
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            Matching is transparent — scores are backed by a breakdown so users
+            can validate results quickly.
+          </p>
+        </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-            <div className="text-xs font-extrabold uppercase tracking-wide text-slate-500">
-              Objective 2
-            </div>
-            <div className="mt-2 text-base font-bold text-slate-900">
-              Digital + data-driven solutions
-            </div>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
-              Structured indicators, searchable directories, and explainable
-              scoring — built for decisions, planning, and implementation
-              review.
-            </p>
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="text-xs font-extrabold uppercase tracking-wide text-slate-500">
+            Live signals
           </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-            <div className="text-xs font-extrabold uppercase tracking-wide text-slate-500">
-              Objective 3
-            </div>
-            <div className="mt-2 text-base font-bold text-slate-900">
-              Youth leadership + innovation
-            </div>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
-              A deployable prototype that can be extended by youth teams:
-              ingestion-ready APIs, modular pages, and visible methodology.
-            </p>
+          <div className="mt-2 text-base font-bold text-slate-900">
+            Stay current
           </div>
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            Monitor clean-energy policy and market developments with live news
+            updates and country filtering.
+          </p>
         </div>
       </section>
 
       {/* HOW IT WORKS */}
       <section className="rounded-3xl border border-slate-200 bg-white p-7 shadow-sm md:p-10">
-        <div>
-          <h2 className="text-2xl font-extrabold tracking-tight text-slate-950">
-            Built for the exact “portal + matching” requirement
-          </h2>
-          <p className="mt-2 max-w-2xl text-sm text-slate-600">
-            A platform connecting clean-energy startups with investors, and a
-            knowledge hub showing potential, action plans, and regulatory
-            frameworks — built as a working product, not a slide deck.
-          </p>
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h2 className="text-2xl font-extrabold tracking-tight text-slate-950">
+              A simple flow from discovery to action
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm text-slate-600">
+              Designed for quick demos and real daily use.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <a
+              href="/startups"
+              className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50"
+            >
+              Startups
+            </a>
+            <a
+              href="/investors"
+              className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50"
+            >
+              Investors
+            </a>
+            <a
+              href="/projects"
+              className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50"
+            >
+              Projects
+            </a>
+          </div>
         </div>
 
         <div className="mt-7 grid gap-4 md:grid-cols-3">
@@ -264,12 +253,11 @@ export default function Home() {
                 1
               </div>
               <div className="text-sm font-bold text-slate-900">
-                Knowledge hub by country
+                Explore country context
               </div>
             </div>
             <p className="mt-3 text-sm leading-6 text-slate-600">
-              Readiness indicators, policy frameworks, and live updates —
-              designed for side-by-side comparison.
+              Review readiness signals, policies, and updates in one place.
             </p>
           </div>
 
@@ -279,12 +267,11 @@ export default function Home() {
                 2
               </div>
               <div className="text-sm font-bold text-slate-900">
-                Ecosystem directory
+                Discover the ecosystem
               </div>
             </div>
             <p className="mt-3 text-sm leading-6 text-slate-600">
-              Projects, startups, and investors with filters that match real
-              evaluation workflows.
+              Browse projects, startups, and investors with intuitive filters.
             </p>
           </div>
 
@@ -294,58 +281,58 @@ export default function Home() {
                 3
               </div>
               <div className="text-sm font-bold text-slate-900">
-                Explainable matching
+                Match and validate
               </div>
             </div>
             <p className="mt-3 text-sm leading-6 text-slate-600">
-              Open a project card → see top investor matches scored 0–100 with
-              reasons and breakdown.
+              Open a project to see top investor matches with a clear score
+              breakdown.
             </p>
           </div>
         </div>
       </section>
 
-      {/* USE CASES */}
+      {/* WHO IT'S FOR */}
       <section className="grid gap-4 lg:grid-cols-3">
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="text-xs font-extrabold uppercase tracking-wide text-slate-500">
-            For policymakers
+            Policy & public sector
           </div>
           <div className="mt-2 text-base font-bold text-slate-900">
-            Planning + implementation support
+            Planning with evidence
           </div>
           <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-6 text-slate-600">
-            <li>Compare readiness indicators across CECECO countries</li>
-            <li>Track relevant policy/regulatory signals via live updates</li>
-            <li>Identify priority sectors, constraints, and investment gaps</li>
+            <li>Compare readiness signals across countries</li>
+            <li>Track policy and market updates</li>
+            <li>Identify gaps and investment priorities</li>
           </ul>
         </div>
 
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="text-xs font-extrabold uppercase tracking-wide text-slate-500">
-            For startups
+            Startups & builders
           </div>
           <div className="mt-2 text-base font-bold text-slate-900">
-            Faster investor discovery
+            Find aligned capital faster
           </div>
           <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-6 text-slate-600">
-            <li>Find aligned capital by sector + stage + geography</li>
-            <li>Use match reasons to justify outreach and positioning</li>
-            <li>Use country context to tailor market-entry narrative</li>
+            <li>Discover investors by sector, stage, and geography</li>
+            <li>Use match reasons to guide outreach</li>
+            <li>Understand country context for market entry</li>
           </ul>
         </div>
 
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="text-xs font-extrabold uppercase tracking-wide text-slate-500">
-            For investors
+            Investors & partners
           </div>
           <div className="mt-2 text-base font-bold text-slate-900">
             Context-aware pipeline
           </div>
           <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-6 text-slate-600">
-            <li>Shortlist startups/projects with explainable scoring</li>
-            <li>Validate geo-policy fit before outreach</li>
-            <li>Use news signals as lightweight diligence prompts</li>
+            <li>Shortlist projects and startups with filters</li>
+            <li>Review geo-policy context before outreach</li>
+            <li>Use live news as diligence prompts</li>
           </ul>
         </div>
       </section>
@@ -360,11 +347,11 @@ export default function Home() {
         <div className="relative flex flex-wrap items-end justify-between gap-4">
           <div>
             <h2 className="text-2xl font-extrabold tracking-tight">
-              Demo the platform like a finished product
+              Start exploring today
             </h2>
             <p className="mt-2 max-w-2xl text-sm text-white/80">
-              Start with a country briefing → open a project → show the matching
-              widget → validate with live news.
+              Countries, projects, investors, and live updates — built for fast
+              decisions and clear demos.
             </p>
           </div>
 
@@ -400,43 +387,41 @@ export default function Home() {
         <div className="mt-6 grid gap-4 md:grid-cols-2">
           <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
             <div className="text-sm font-bold text-slate-900">
-              Is the news real-time?
+              Where does the news come from?
             </div>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              Yes — news links are fetched from public sources via the GDELT API
-              and shown as live updates with search and filtering.
+              News links are fetched from public sources via the GDELT API and
+              displayed as live updates with search and filtering.
             </p>
           </div>
 
           <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
             <div className="text-sm font-bold text-slate-900">
-              What makes this “data-driven”?
+              How does matching work?
             </div>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              The platform is built around structured indicators and queryable
-              models (countries, projects, investors), with explainable matching
-              that shows its scoring logic.
+              Matches are scored 0–100 using country fit, sector alignment, and
+              stage fit — each shown with reasons and a breakdown.
             </p>
           </div>
 
           <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
             <div className="text-sm font-bold text-slate-900">
-              Can curated indicators be replaced with official datasets?
+              Can datasets be upgraded over time?
             </div>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              Yes — the indicator layer is intentionally transparent and
-              ingestion-ready, so official sources can replace curated values
-              without rewriting the product.
+              Yes. The data layer is designed to ingest official datasets and
+              replace curated values without rewriting the product.
             </p>
           </div>
 
           <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
             <div className="text-sm font-bold text-slate-900">
-              Where can I verify endpoints?
+              Where can I inspect the API?
             </div>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              Open the interactive API docs to inspect countries, investors,
-              projects, matching, and news endpoints.
+              Open the interactive API docs to explore endpoints for countries,
+              projects, investors, matching, and news.
             </p>
             <div className="mt-3">
               <a
