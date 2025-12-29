@@ -226,6 +226,18 @@ export default function Home() {
           </div>
           <div className="flex flex-wrap gap-2">
             <a
+              href="/countries"
+              className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-slate-800"
+            >
+              Explore countries →
+            </a>
+            <a
+              href="/projects"
+              className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50"
+            >
+              Projects
+            </a>
+            <a
               href="/startups"
               className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50"
             >
@@ -236,12 +248,6 @@ export default function Home() {
               className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50"
             >
               Investors
-            </a>
-            <a
-              href="/projects"
-              className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50"
-            >
-              Projects
             </a>
           </div>
         </div>
