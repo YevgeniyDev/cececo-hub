@@ -197,7 +197,7 @@ export default function PlanetGlobe({ accent = "#10b981" }) {
               <span className="font-semibold text-slate-900">{activeName}</span>
             </>
           ) : (
-            "Tap a highlighted ECO country"
+            "ECO focus countries selected for analytical scope in this project."
           )}
         </div>
 
