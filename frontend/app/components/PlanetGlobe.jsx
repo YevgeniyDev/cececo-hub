@@ -2,16 +2,33 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ECO_COUNTRIES } from "../data/ecoCountries";
+import useMeasure from "react-use-measure";
+import { feature } from "topojson-client";
 
 const Globe = dynamic(() => import("react-globe.gl"), { ssr: false });
 
+// Use names that match the dataset names (we’ll also do light normalization)
+const ECO_SET = new Set([
+  "Pakistan",
+  "Uzbekistan",
+  "Kyrgyzstan",
+  "Kazakhstan",
+  "Turkey",
+  "Azerbaijan",
+]);
+
+function normName(s = "") {
+  return s.trim().toLowerCase();
+}
+
 export default function PlanetGlobe({ accent = "#22c55e" }) {
   const globeRef = useRef(null);
-  const [active, setActive] = useState(null);
+  const [ref, bounds] = useMeasure();
   const [isMobile, setIsMobile] = useState(false);
+  const [countries, setCountries] = useState(null);
+  const [activeName, setActiveName] = useState(null);
 
-  // detect mobile once
+  // mobile detect
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 768);
     onResize();
@@ -19,104 +36,161 @@ export default function PlanetGlobe({ accent = "#22c55e" }) {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  // minimal “points” styling
-  const points = useMemo(
-    () =>
-      ECO_COUNTRIES.map((c) => ({
-        ...c,
-        size: 0.55,
-        color: accent,
-      })),
-    [accent]
-  );
+  // load world countries (TopoJSON -> GeoJSON)
+  useEffect(() => {
+    let cancelled = false;
 
+    async function load() {
+      const res = await fetch(
+        "https://unpkg.com/world-atlas@2/countries-110m.json"
+      );
+      const topo = await res.json();
+      const geo = feature(topo, topo.objects.countries);
+      if (!cancelled) setCountries(geo.features);
+    }
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Set initial view: focus around Central Asia / ECO region
   useEffect(() => {
     if (!globeRef.current) return;
+    globeRef.current.pointOfView(
+      { lat: 41, lng: 62, altitude: isMobile ? 2.2 : 1.9 },
+      0
+    );
 
     const controls = globeRef.current.controls();
-    controls.enablePan = false; // keep it clean
-    controls.minDistance = 160;
-    controls.maxDistance = 260;
-
-    // rotate only on desktop
+    controls.enablePan = false;
+    controls.enableZoom = true;
+    controls.minDistance = 140;
+    controls.maxDistance = 320;
     controls.autoRotate = !isMobile;
-    controls.autoRotateSpeed = 0.35;
+    controls.autoRotateSpeed = 0.25;
   }, [isMobile]);
 
-  const focusOn = (p) => {
-    setActive(p);
+  const polygonCapColor = (feat) => {
+    const name =
+      feat.properties?.name ||
+      feat.properties?.NAME ||
+      feat.properties?.admin ||
+      "";
 
-    // Smooth camera move to point
+    const isEco =
+      ECO_SET.has(
+        // try both raw and normalized matching
+        name
+      ) ||
+      ECO_SET.has(
+        // fallback normalization
+        name
+          .replace("Kyrgyz Republic", "Kyrgyzstan")
+          .replace("Türkiye", "Turkey")
+      );
+
+    if (isEco) return "rgba(34,197,94,0.55)"; // accent fill
+    return "rgba(15,23,42,0.10)"; // very subtle world
+  };
+
+  const polygonSideColor = (feat) => {
+    const name = feat.properties?.name || feat.properties?.NAME || "";
+    const isEco = ECO_SET.has(name);
+    return isEco ? "rgba(34,197,94,0.35)" : "rgba(15,23,42,0.03)";
+  };
+
+  const polygonStrokeColor = (feat) => {
+    const name = feat.properties?.name || feat.properties?.NAME || "";
+    const isEco = ECO_SET.has(name);
+    return isEco ? "rgba(34,197,94,0.8)" : "rgba(148,163,184,0.08)";
+  };
+
+  const onPolyClick = (feat) => {
+    const name = feat.properties?.name || feat.properties?.NAME || "Country";
+    setActiveName(name);
+
+    // center camera on polygon centroid-ish (bbox center)
+    const coords = feat.geometry?.coordinates;
+    // If you want perfect centroid: later, use turf/centroid. For MVP, just zoom in.
     if (globeRef.current) {
-      const altitude = isMobile ? 1.9 : 1.6;
-      globeRef.current.pointOfView({ lat: p.lat, lng: p.lng, altitude }, 900);
+      globeRef.current.pointOfView(
+        { lat: 41, lng: 62, altitude: isMobile ? 2.0 : 1.7 },
+        700
+      );
     }
   };
 
+  const w = Math.max(1, Math.floor(bounds.width));
+  const h = Math.max(1, Math.floor(bounds.height));
+
   return (
-    <div className="relative w-full">
-      <div className="relative h-[320px] w-full md:h-[460px]">
+    <div className="w-full">
+      {/* CARD that CONSTRAINS canvas */}
+      <div
+        ref={ref}
+        className="
+          relative w-full overflow-hidden rounded-3xl
+          border border-slate-200 bg-white/60 shadow-sm backdrop-blur
+          h-[260px] md:h-[340px]
+        "
+      >
+        {/* Globe fills the card exactly */}
         <Globe
           ref={globeRef}
+          width={w}
+          height={h}
           backgroundColor="rgba(0,0,0,0)"
-          // Pick one texture. This one is minimal & readable.
           globeImageUrl="//unpkg.com/three-globe/example/img/earth-dark.jpg"
-          // ECO markers
-          pointsData={points}
-          pointLat="lat"
-          pointLng="lng"
-          pointRadius={(d) => d.size}
-          pointColor={(d) => d.color}
-          pointAltitude={() => 0.02}
-          // Tooltip (minimal)
-          pointLabel={(d) => `
-            <div style="font-size:12px;padding:6px 8px;border-radius:10px;background:rgba(15,23,42,0.9);color:white;">
-              <b>${d.name}</b><br/>
-              ECO focus
-            </div>
-          `}
-          // Interaction
-          onPointClick={focusOn}
-          onPointHover={(p) => {
-            // On mobile, ignore hover.
-            if (isMobile) return;
-            if (p) setActive(p);
+          // Polygons highlight (instead of ugly markers)
+          polygonsData={countries || []}
+          polygonAltitude={(feat) => {
+            const name = feat.properties?.name || feat.properties?.NAME || "";
+            return ECO_SET.has(name) ? 0.06 : 0.01;
           }}
+          polygonCapColor={polygonCapColor}
+          polygonSideColor={polygonSideColor}
+          polygonStrokeColor={polygonStrokeColor}
+          polygonLabel={(feat) => {
+            const name = feat.properties?.name || feat.properties?.NAME || "";
+            const eco = ECO_SET.has(name);
+            if (!eco) return "";
+            return `
+              <div style="font-size:12px;padding:6px 8px;border-radius:10px;background:rgba(15,23,42,0.9);color:white;">
+                <b>${name}</b><br/>ECO focus
+              </div>
+            `;
+          }}
+          onPolygonClick={onPolyClick}
+          // performance tweak
+          rendererConfig={{ antialias: true, alpha: true }}
         />
 
-        {/* Soft mask / glow overlay (minimalistic planet feel) */}
-        <div className="pointer-events-none absolute inset-0 rounded-3xl bg-gradient-to-tr from-slate-900/10 via-transparent to-emerald-500/10" />
+        {/* subtle overlay for premium feel */}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-slate-900/10 via-transparent to-emerald-500/10" />
       </div>
 
-      {/* Minimal country card (works on mobile) */}
-      <div className="mt-3">
-        {active ? (
-          <div className="rounded-2xl border border-slate-200 bg-white/70 p-3 shadow-sm backdrop-blur">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <div className="text-sm font-semibold text-slate-900">
-                  {active.name}
-                </div>
-                <div className="text-xs text-slate-600">
-                  ECO region • Tap other markers to switch
-                </div>
-              </div>
-
-              {/* optional: link to your country page if you have it */}
-              {/* <Link href={`/countries/${active.code}`}>View</Link> */}
-              <button
-                onClick={() => setActive(null)}
-                className="rounded-xl border border-slate-200 bg-white px-3 py-1 text-xs text-slate-700 hover:bg-slate-50"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="text-xs text-slate-600">
-            Tap a highlighted point to explore ECO countries.
-          </div>
-        )}
+      {/* small caption / active country */}
+      <div className="mt-2 flex items-center justify-between">
+        <div className="text-xs text-slate-600">
+          {activeName ? (
+            <>
+              Selected:{" "}
+              <span className="font-semibold text-slate-900">{activeName}</span>
+            </>
+          ) : (
+            "Tap a highlighted ECO country"
+          )}
+        </div>
+        {activeName ? (
+          <button
+            onClick={() => setActiveName(null)}
+            className="text-xs rounded-xl border border-slate-200 bg-white px-3 py-1 text-slate-700 hover:bg-slate-50"
+          >
+            Clear
+          </button>
+        ) : null}
       </div>
     </div>
   );
