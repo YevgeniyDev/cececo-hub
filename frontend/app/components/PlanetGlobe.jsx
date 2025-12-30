@@ -177,7 +177,7 @@ export default function PlanetGlobe({ accent = "#10b981" }) {
             if (!isEco(name)) return "";
             return `
               <div style="font-size:12px;padding:6px 8px;border-radius:10px;background:rgba(15,23,42,0.92);color:white;">
-                <b>${name}</b><br/>ECO focus
+                <b>${name}</b><br/>ECO region
               </div>
             `;
           }}
