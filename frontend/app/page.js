@@ -610,25 +610,57 @@ export default function Home() {
       </section>
 
       {/* FINAL CTA */}
-      <section className="rounded-3xl border border-slate-200 bg-slate-900 p-8 text-white shadow-sm md:p-10">
-        <div className="grid gap-6 lg:grid-cols-[1.2fr,0.8fr] lg:items-center">
-          <div>
-            <div className="text-xs font-extrabold uppercase tracking-wide text-white/70">
-              Start here
+      <section className="relative overflow-hidden rounded-3xl border border-slate-200 bg-slate-950 text-white shadow-sm">
+        {/* background glow */}
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-blue-500/10 blur-3xl" />
+          <div className="absolute -right-32 -bottom-32 h-96 w-96 rounded-full bg-emerald-500/10 blur-3xl" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_25%,rgba(59,130,246,0.12),transparent_55%),radial-gradient(circle_at_80%_65%,rgba(16,185,129,0.10),transparent_55%)]" />
+        </div>
+
+        <div className="relative p-8 md:p-10">
+          <div className="grid gap-8 lg:grid-cols-[1.2fr,0.8fr] lg:items-center">
+            {/* left */}
+            <div>
+              <div className="text-xs font-extrabold uppercase tracking-wide text-white/70">
+                Start here
+              </div>
+              <h2 className="mt-3 text-3xl font-extrabold tracking-tight md:text-4xl">
+                Explore the Hub and make changes in minutes.
+              </h2>
+              <p className="mt-3 max-w-xl text-sm leading-6 text-white/75">
+                Decision-ready country context, opportunity pipeline, and
+                transparent matching — without sign-up.
+              </p>
             </div>
-            <h2 className="mt-2 text-3xl font-extrabold tracking-tight">
-              Explore the Hub and make changes in minutes.
-            </h2>
-          </div>
-          <div className="rounded-3xl border border-white/15 bg-white/5 p-6">
-            <a
-              href="/countries"
-              className="inline-flex w-full items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-slate-900 hover:bg-white/90"
-            >
-              Explore the Hub →
-            </a>
-            <div className="mt-3 text-center text-xs text-white/70">
-              No sign-up • Transparent scoring • Source-linked policy items
+
+            {/* right “glass” card */}
+            <div className="rounded-3xl border border-white/15 bg-white/5 p-6 backdrop-blur">
+              <a
+                href="/countries"
+                className="inline-flex w-full items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-slate-900 shadow-sm hover:bg-white/90"
+              >
+                Explore the Hub →
+              </a>
+
+              <div className="mt-3 text-center text-xs text-white/70">
+                No sign-up • Transparent scoring • Source-linked policy items
+              </div>
+
+              {/* optional: secondary links for credibility */}
+              <div className="mt-4 flex items-center justify-center gap-4 text-xs text-white/60">
+                <a href="/news" className="hover:text-white/80">
+                  Latest news
+                </a>
+                <span className="text-white/30">•</span>
+                <a href="/projects" className="hover:text-white/80">
+                  Projects
+                </a>
+                <span className="text-white/30">•</span>
+                <a href="/investors" className="hover:text-white/80">
+                  Investors
+                </a>
+              </div>
             </div>
           </div>
         </div>
