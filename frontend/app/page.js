@@ -166,12 +166,6 @@ export default function Home() {
               Clarity, confidence, and speed in one place
             </h2>
           </div>
-          <a
-            href="/countries"
-            className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-slate-800"
-          >
-            Start with a country →
-          </a>
         </div>
         <div className="mt-6 grid gap-4 lg:grid-cols-3">
           <div className="rounded-3xl border border-slate-200 bg-slate-50 p-6 shadow-sm">
@@ -227,12 +221,6 @@ export default function Home() {
               Built for quick demos and daily workflows.
             </p>
           </div>
-          <a
-            href="/countries"
-            className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-slate-800"
-          >
-            Explore countries →
-          </a>
         </div>
 
         <div className="mt-7 grid gap-4 md:grid-cols-3">
