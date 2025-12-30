@@ -1,4 +1,5 @@
 import PlanetGlobe from "./components/PlanetGlobe";
+import { Globe2, Layers, Handshake } from "lucide-react";
 
 export default function Home() {
   const apiBase =
@@ -115,40 +116,102 @@ export default function Home() {
           </p>
         </div>
 
-        <div className="mt-7 grid gap-4 lg:grid-cols-4">
+        <div className="mt-7 grid gap-4 lg:grid-cols-3">
           {[
             {
               title: "Country intelligence",
-              desc: "Indicators + opportunities + institutions + recent news.",
-              tag: "Compare markets",
+              outcome: "Choose which markets to prioritize.",
+              bullets: [
+                "Policy & incentives",
+                "Market + grid signals",
+                "Recent news context",
+              ],
+              cta: "Compare markets →",
+              href: "/countries",
+              Icon: Globe2,
+              featured: true,
             },
             {
               title: "Projects & startups",
-              desc: "Relevant information, strong filtering, and evaluated matching with investors.",
-              tag: "Browse ecosystem",
+              outcome: "Find high-potential opportunities faster.",
+              bullets: [
+                "Filters that matter",
+                "Shortlisted pipeline",
+                "Match-ready profiles",
+              ],
+              cta: "Browse ecosystem →",
+              href: "/projects",
+              Icon: Layers,
             },
             {
               title: "Investors & partners",
-              desc: "Focus, ticket, stage, and coverage aligned to matching logic.",
-              tag: "Find sponsors",
+              outcome: "Identify the right funding fit.",
+              bullets: [
+                "Ticket & stage",
+                "Thesis & focus",
+                "Coverage alignment",
+              ],
+              cta: "Find sponsors →",
+              href: "/investors",
+              Icon: Handshake,
             },
           ].map((f) => (
-            <div
+            <a
               key={f.title}
-              className="rounded-3xl border border-slate-200 bg-slate-50 p-6 shadow-sm"
+              href={f.href}
+              className={[
+                "group block rounded-3xl border p-6 transition",
+                "hover:-translate-y-0.5 hover:shadow-md",
+                "focus:outline-none focus:ring-2 focus:ring-emerald-500/40",
+                f.featured
+                  ? "border-emerald-200 bg-gradient-to-br from-emerald-50/60 via-white to-white"
+                  : "border-slate-200 bg-slate-50 hover:border-slate-300",
+              ].join(" ")}
             >
-              <div className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700">
-                {f.tag}
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div
+                    className={[
+                      "rounded-2xl p-2",
+                      f.featured
+                        ? "bg-emerald-500/10 text-emerald-700"
+                        : "bg-slate-900/5 text-slate-700",
+                    ].join(" ")}
+                  >
+                    <f.Icon className="h-5 w-5" />
+                  </div>
+                  <div className="text-base font-extrabold text-slate-900">
+                    {f.title}
+                  </div>
+                </div>
+
+                {/* micro label (subtle) */}
+                <div className="rounded-full bg-slate-900/5 px-3 py-1 text-xs font-semibold text-slate-600">
+                  What it unlocks
+                </div>
               </div>
-              <div className="mt-3 text-base font-bold text-slate-900">
-                {f.title}
+
+              <div className="mt-3 text-sm font-semibold text-slate-800">
+                {f.outcome}
               </div>
-              <p className="mt-2 text-sm leading-6 text-slate-600">{f.desc}</p>
-            </div>
+
+              <ul className="mt-3 space-y-1 text-sm text-slate-600">
+                {f.bullets.map((b) => (
+                  <li key={b} className="flex gap-2">
+                    <span className="mt-2 h-1.5 w-1.5 rounded-full bg-emerald-500/70" />
+                    <span>{b}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <div className="mt-4 text-sm font-semibold text-emerald-700 group-hover:text-emerald-800">
+                {f.cta}
+              </div>
+            </a>
           ))}
         </div>
       </section>
-
+      
       {/* HOW IT WORKS */}
       <section
         id="how-it-works"
