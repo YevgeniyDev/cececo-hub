@@ -630,7 +630,7 @@ export default function Home() {
               </h2>
               <p className="mt-3 max-w-xl text-sm leading-6 text-white/75">
                 Decision-ready country context, opportunity pipeline, and
-                transparent matching — without sign-up.
+                matching system - without sign-up.
               </p>
             </div>
 
@@ -645,21 +645,6 @@ export default function Home() {
 
               <div className="mt-3 text-center text-xs text-white/70">
                 No sign-up • Transparent scoring • Source-linked policy items
-              </div>
-
-              {/* optional: secondary links for credibility */}
-              <div className="mt-4 flex items-center justify-center gap-4 text-xs text-white/60">
-                <a href="/news" className="hover:text-white/80">
-                  Latest news
-                </a>
-                <span className="text-white/30">•</span>
-                <a href="/projects" className="hover:text-white/80">
-                  Projects
-                </a>
-                <span className="text-white/30">•</span>
-                <a href="/investors" className="hover:text-white/80">
-                  Investors
-                </a>
               </div>
             </div>
           </div>
