@@ -179,11 +179,6 @@ export default function Home() {
                     {f.title}
                   </div>
                 </div>
-
-                {/* micro label (subtle) */}
-                <div className="rounded-full bg-slate-900/5 px-3 py-1 text-xs font-semibold text-slate-600">
-                  What it unlocks
-                </div>
               </div>
 
               <div className="mt-3 text-sm font-semibold text-slate-800">
