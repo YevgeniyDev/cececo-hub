@@ -17,3 +17,9 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+canvas {
+  max-width: 100%;
+  height: auto;
+  touch-action: manipulation;
+}

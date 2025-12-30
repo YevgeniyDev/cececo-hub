@@ -1,3 +1,5 @@
+import PlanetGlobe from "./components/PlanetGlobe";
+
 export default function Home() {
   const apiBase =
     process.env.NEXT_PUBLIC_API_BASE ||
@@ -80,6 +82,13 @@ export default function Home() {
                   <span className="font-semibold">No sign-up to browse.</span>{" "}
                   Transparent scoring. Sources attached to policy items.
                 </div>
+              </div>
+            </div>
+
+            {/* RIGHT: interactive planet */}
+            <div className="md:pl-6">
+              <div className="rounded-3xl border border-slate-200 bg-white/60 p-4 shadow-sm backdrop-blur">
+                <PlanetGlobe accent="#10b981" />
               </div>
             </div>
           </div>
