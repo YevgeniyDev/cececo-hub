@@ -1,3 +1,5 @@
+import ECORegionMap from "./components/ECORegionMap";
+
 export default function Home() {
   const apiBase =
     process.env.NEXT_PUBLIC_API_BASE ||
@@ -81,6 +83,11 @@ export default function Home() {
                   Transparent scoring. Sources attached to policy items.
                 </div>
               </div>
+            </div>
+
+            {/* right: interactive map */}
+            <div className="lg:pt-4">
+              <ECORegionMap />
             </div>
           </div>
         </div>
@@ -397,8 +404,7 @@ export default function Home() {
               Explore the Hub →
             </a>
             <div className="mt-3 text-center text-xs text-white/70">
-              No sign-up to browse • Transparent scoring • Source-linked policy
-              items
+              No sign-up • Transparent scoring • Source-linked policy items
             </div>
           </div>
         </div>
