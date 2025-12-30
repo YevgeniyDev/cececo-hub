@@ -86,8 +86,8 @@ export default function Home() {
             </div>
 
             {/* RIGHT: interactive planet */}
-            <div className="md:pl-6">
-              <div className="rounded-3xl border border-slate-200 bg-white/60 p-4 shadow-sm backdrop-blur">
+            <div className="min-w-0 md:pl-6">
+              <div className="min-w-0 w-full overflow-hidden rounded-3xl border border-slate-200 bg-white/60 p-3 md:p-4 shadow-sm backdrop-blur">
                 <PlanetGlobe accent="#10b981" />
               </div>
             </div>

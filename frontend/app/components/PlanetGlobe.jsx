@@ -1,13 +1,12 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import useMeasure from "react-use-measure";
 import { feature } from "topojson-client";
 
 const Globe = dynamic(() => import("react-globe.gl"), { ssr: false });
 
-// Use names that match the dataset names (we’ll also do light normalization)
 const ECO_SET = new Set([
   "Pakistan",
   "Uzbekistan",
@@ -17,16 +16,30 @@ const ECO_SET = new Set([
   "Azerbaijan",
 ]);
 
-function normName(s = "") {
-  return s.trim().toLowerCase();
+function normalizeCountryName(nameRaw = "") {
+  return nameRaw
+    .trim()
+    .replace("Kyrgyz Republic", "Kyrgyzstan")
+    .replace("Türkiye", "Turkey");
 }
 
-export default function PlanetGlobe({ accent = "#22c55e" }) {
+function isEco(nameRaw = "") {
+  return ECO_SET.has(normalizeCountryName(nameRaw));
+}
+
+export default function PlanetGlobe({ accent = "#10b981" }) {
   const globeRef = useRef(null);
+
+  // measure container width only
   const [ref, bounds] = useMeasure();
+  const [W, setW] = useState(1);
+
   const [isMobile, setIsMobile] = useState(false);
   const [countries, setCountries] = useState(null);
   const [activeName, setActiveName] = useState(null);
+
+  // fixed heights => no feedback loop
+  const fixedH = isMobile ? 240 : 320; // smaller hero block (tweak if needed)
 
   // mobile detect
   useEffect(() => {
@@ -35,6 +48,12 @@ export default function PlanetGlobe({ accent = "#22c55e" }) {
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
+
+  // snap width updates to avoid 1px oscillation loops
+  useEffect(() => {
+    const next = Math.max(1, Math.round(bounds.width || 1));
+    setW((prev) => (Math.abs(prev - next) <= 1 ? prev : next));
+  }, [bounds.width]);
 
   // load world countries (TopoJSON -> GeoJSON)
   useEffect(() => {
@@ -55,9 +74,11 @@ export default function PlanetGlobe({ accent = "#22c55e" }) {
     };
   }, []);
 
-  // Set initial view: focus around Central Asia / ECO region
+  // set camera + controls
   useEffect(() => {
     if (!globeRef.current) return;
+
+    // Focus on ECO region (Central Asia-ish)
     globeRef.current.pointOfView(
       { lat: 41, lng: 62, altitude: isMobile ? 2.2 : 1.9 },
       0
@@ -66,54 +87,55 @@ export default function PlanetGlobe({ accent = "#22c55e" }) {
     const controls = globeRef.current.controls();
     controls.enablePan = false;
     controls.enableZoom = true;
+
+    // Keep zoom bounded so it feels “hero-like”
     controls.minDistance = 140;
     controls.maxDistance = 320;
+
+    // rotate only on desktop
     controls.autoRotate = !isMobile;
     controls.autoRotateSpeed = 0.25;
   }, [isMobile]);
 
+  // styling for polygons
   const polygonCapColor = (feat) => {
     const name =
       feat.properties?.name ||
       feat.properties?.NAME ||
       feat.properties?.admin ||
       "";
-
-    const isEco =
-      ECO_SET.has(
-        // try both raw and normalized matching
-        name
-      ) ||
-      ECO_SET.has(
-        // fallback normalization
-        name
-          .replace("Kyrgyz Republic", "Kyrgyzstan")
-          .replace("Türkiye", "Turkey")
-      );
-
-    if (isEco) return "rgba(34,197,94,0.55)"; // accent fill
-    return "rgba(15,23,42,0.10)"; // very subtle world
+    if (isEco(name)) {
+      // Use accent but keep subtle
+      // If you want, you can compute rgba from accent; MVP uses constant.
+      return "rgba(16,185,129,0.55)";
+    }
+    return "rgba(15,23,42,0.10)";
   };
 
   const polygonSideColor = (feat) => {
     const name = feat.properties?.name || feat.properties?.NAME || "";
-    const isEco = ECO_SET.has(name);
-    return isEco ? "rgba(34,197,94,0.35)" : "rgba(15,23,42,0.03)";
+    return isEco(name) ? "rgba(16,185,129,0.30)" : "rgba(15,23,42,0.02)";
   };
 
   const polygonStrokeColor = (feat) => {
     const name = feat.properties?.name || feat.properties?.NAME || "";
-    const isEco = ECO_SET.has(name);
-    return isEco ? "rgba(34,197,94,0.8)" : "rgba(148,163,184,0.08)";
+    return isEco(name) ? "rgba(16,185,129,0.85)" : "rgba(148,163,184,0.08)";
   };
 
-  const onPolyClick = (feat) => {
-    const name = feat.properties?.name || feat.properties?.NAME || "Country";
+  const polygonAltitude = (feat) => {
+    const name = feat.properties?.name || feat.properties?.NAME || "";
+    return isEco(name) ? 0.055 : 0.01;
+  };
+
+  const onPolygonClick = (feat) => {
+    const raw =
+      feat.properties?.name || feat.properties?.NAME || feat.properties?.admin;
+    const name = normalizeCountryName(raw || "Country");
+    if (!isEco(name)) return;
+
     setActiveName(name);
 
-    // center camera on polygon centroid-ish (bbox center)
-    const coords = feat.geometry?.coordinates;
-    // If you want perfect centroid: later, use turf/centroid. For MVP, just zoom in.
+    // Keep the focus region stable (hero) rather than jumping wildly.
     if (globeRef.current) {
       globeRef.current.pointOfView(
         { lat: 41, lng: 62, altitude: isMobile ? 2.0 : 1.7 },
@@ -122,56 +144,51 @@ export default function PlanetGlobe({ accent = "#22c55e" }) {
     }
   };
 
-  const w = Math.max(1, Math.floor(bounds.width));
-  const h = Math.max(1, Math.floor(bounds.height));
-
   return (
     <div className="w-full">
-      {/* CARD that CONSTRAINS canvas */}
+      {/* Card that constrains the canvas */}
       <div
         ref={ref}
         className="
-          relative w-full overflow-hidden rounded-3xl
+          relative w-full min-w-0 overflow-hidden rounded-3xl
           border border-slate-200 bg-white/60 shadow-sm backdrop-blur
-          h-[260px] md:h-[340px]
+          h-[240px] md:h-[320px]
         "
       >
-        {/* Globe fills the card exactly */}
         <Globe
           ref={globeRef}
-          width={w}
-          height={h}
+          width={W}
+          height={fixedH}
           backgroundColor="rgba(0,0,0,0)"
           globeImageUrl="//unpkg.com/three-globe/example/img/earth-dark.jpg"
-          // Polygons highlight (instead of ugly markers)
+          rendererConfig={{ antialias: true, alpha: true }}
           polygonsData={countries || []}
-          polygonAltitude={(feat) => {
-            const name = feat.properties?.name || feat.properties?.NAME || "";
-            return ECO_SET.has(name) ? 0.06 : 0.01;
-          }}
+          polygonAltitude={polygonAltitude}
           polygonCapColor={polygonCapColor}
           polygonSideColor={polygonSideColor}
           polygonStrokeColor={polygonStrokeColor}
           polygonLabel={(feat) => {
-            const name = feat.properties?.name || feat.properties?.NAME || "";
-            const eco = ECO_SET.has(name);
-            if (!eco) return "";
+            const raw =
+              feat.properties?.name ||
+              feat.properties?.NAME ||
+              feat.properties?.admin ||
+              "";
+            const name = normalizeCountryName(raw);
+            if (!isEco(name)) return "";
             return `
-              <div style="font-size:12px;padding:6px 8px;border-radius:10px;background:rgba(15,23,42,0.9);color:white;">
+              <div style="font-size:12px;padding:6px 8px;border-radius:10px;background:rgba(15,23,42,0.92);color:white;">
                 <b>${name}</b><br/>ECO focus
               </div>
             `;
           }}
-          onPolygonClick={onPolyClick}
-          // performance tweak
-          rendererConfig={{ antialias: true, alpha: true }}
+          onPolygonClick={onPolygonClick}
         />
 
-        {/* subtle overlay for premium feel */}
+        {/* subtle overlay */}
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-slate-900/10 via-transparent to-emerald-500/10" />
       </div>
 
-      {/* small caption / active country */}
+      {/* small caption */}
       <div className="mt-2 flex items-center justify-between">
         <div className="text-xs text-slate-600">
           {activeName ? (
@@ -183,10 +200,11 @@ export default function PlanetGlobe({ accent = "#22c55e" }) {
             "Tap a highlighted ECO country"
           )}
         </div>
+
         {activeName ? (
           <button
             onClick={() => setActiveName(null)}
-            className="text-xs rounded-xl border border-slate-200 bg-white px-3 py-1 text-slate-700 hover:bg-slate-50"
+            className="rounded-xl border border-slate-200 bg-white px-3 py-1 text-xs text-slate-700 hover:bg-slate-50"
           >
             Clear
           </button>
