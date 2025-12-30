@@ -129,7 +129,6 @@ export default function Home() {
               cta: "Compare markets →",
               href: "/countries",
               Icon: Globe2,
-              featured: true,
             },
             {
               title: "Projects & startups",
@@ -163,9 +162,7 @@ export default function Home() {
                 "group block rounded-3xl border p-6 transition",
                 "hover:-translate-y-0.5 hover:shadow-md",
                 "focus:outline-none focus:ring-2 focus:ring-emerald-500/40",
-                f.featured
-                  ? "border-emerald-200 bg-gradient-to-br from-emerald-50/60 via-white to-white"
-                  : "border-slate-200 bg-slate-50 hover:border-slate-300",
+                "border-slate-200 bg-slate-50 hover:border-slate-300",
               ].join(" ")}
             >
               <div className="flex items-start justify-between gap-3">
@@ -173,9 +170,7 @@ export default function Home() {
                   <div
                     className={[
                       "rounded-2xl p-2",
-                      f.featured
-                        ? "bg-emerald-500/10 text-emerald-700"
-                        : "bg-slate-900/5 text-slate-700",
+                      "bg-slate-900/5 text-slate-700",
                     ].join(" ")}
                   >
                     <f.Icon className="h-5 w-5" />
@@ -265,7 +260,6 @@ export default function Home() {
                 desc: "Discover investors and partners with transparent scoring and reasons.",
                 outcome: "Outcome: you know who to contact and why.",
                 href: "/investors",
-                featured: true,
               },
             ].map((s) => (
               <a
@@ -275,9 +269,7 @@ export default function Home() {
                   "group relative block rounded-3xl border p-6 transition",
                   "hover:-translate-y-0.5 hover:shadow-md",
                   "focus:outline-none focus:ring-2 focus:ring-emerald-500/40",
-                  s.featured
-                    ? "border-emerald-200 bg-gradient-to-br from-emerald-50/60 via-white to-white"
-                    : "border-slate-200 bg-slate-50 hover:border-slate-300",
+                  "border-slate-200 bg-slate-50 hover:border-slate-300",
                 ].join(" ")}
               >
                 {/* step bubble sitting on the “rail” */}
@@ -348,7 +340,7 @@ export default function Home() {
               ))}
             </div>
 
-            <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50/50 p-5">
+            <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-5">
               <div className="text-sm font-extrabold text-slate-900">
                 Trust signal
               </div>
@@ -540,7 +532,6 @@ export default function Home() {
               ],
               cta: "Explore countries →",
               href: "/countries",
-              featured: true,
             },
             {
               title: "Project & Startup builders",
