@@ -5,7 +5,8 @@ import { useState } from "react";
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE ||
   process.env.API_INTERNAL_BASE ||
-  "https://cececo-hub.onrender.com";
+  "https://cececo-hub.onrender.com" ||
+  "https://cececo-hub.vercel.app";
 
 export default function ProjectForm({ kind = "project", countries = [], onSuccess, onCancel }) {
   const [formData, setFormData] = useState({

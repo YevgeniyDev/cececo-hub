@@ -7,7 +7,8 @@ import InvestorForm from "./InvestorForm";
 const API_BASE = (
   process.env.API_INTERNAL_BASE ||
   process.env.NEXT_PUBLIC_API_BASE ||
-  "https://cececo-hub.onrender.com"
+  "https://cececo-hub.onrender.com" ||
+  "https://cececo-hub.vercel.app"
 ).replace(/\/+$/, "");
 
 async function fetchJSON(url) {

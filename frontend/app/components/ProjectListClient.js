@@ -7,7 +7,8 @@ import ProjectForm from "./ProjectForm";
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE ||
   process.env.API_INTERNAL_BASE ||
-  "https://cececo-hub.onrender.com";
+  "https://cececo-hub.onrender.com" ||
+  "https://cececo-hub.vercel.app";
 
 async function fetchJSON(url) {
   const res = await fetch(url, { cache: "no-store" });

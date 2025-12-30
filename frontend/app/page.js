@@ -2,7 +2,8 @@ export default function Home() {
   const apiBase =
     process.env.NEXT_PUBLIC_API_BASE ||
     process.env.API_INTERNAL_BASE ||
-    "https://cececo-hub.onrender.com";
+    "https://cececo-hub.onrender.com" || 
+    "https://cececo-hub.vercel.app";
 
   const apiDocsUrl = `${String(apiBase).replace(/\/+$/, "")}/docs`;
 
