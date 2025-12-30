@@ -21,6 +21,7 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "https://cececo-hub-1.onrender.com",
+        "https://cececo-hub.vercel.app",
     ],
     allow_credentials=False,
     allow_methods=["*"],
