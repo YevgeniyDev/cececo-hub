@@ -211,7 +211,7 @@ export default function Home() {
           ))}
         </div>
       </section>
-      
+
       {/* HOW IT WORKS */}
       <section
         id="how-it-works"
@@ -223,48 +223,87 @@ export default function Home() {
               How it works
             </div>
             <h2 className="mt-1 text-2xl font-extrabold tracking-tight text-slate-950">
-              From “interesting market” to actionable insights
+              From signal → decision in three steps
             </h2>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              A simple workflow that fits daily diligence, market research, and
-              stakeholder updates.
+              Designed for daily diligence: quick context, consistent
+              evaluation, and clear next actions.
             </p>
           </div>
+
+          <a
+            href="/countries"
+            className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50"
+          >
+            Start with a country →
+          </a>
         </div>
 
-        <div className="mt-7 grid gap-4 md:grid-cols-3">
-          {[
-            {
-              step: "01",
-              title: "Start with a country",
-              desc: "See readiness news, key policies, institutions, and what projects/startups/investors are working there.",
-            },
-            {
-              step: "02",
-              title: "Browse the ecosystem",
-              desc: "Projects and startups are evaluated consistently to find the best matches with investors.",
-            },
-            {
-              step: "03",
-              title: "Find sponsors",
-              desc: "Find investors and partners with transparent scoring and reasons.",
-            },
-          ].map((s) => (
-            <div
-              key={s.step}
-              className="rounded-3xl border border-slate-200 bg-slate-50 p-6 shadow-sm"
-            >
-              <div className="flex items-center justify-between">
-                <div className="text-xs font-extrabold uppercase tracking-wide text-slate-500">
-                  Step {s.step}
+        {/* “rail” that connects steps (design intent) */}
+        <div className="relative mt-7">
+          <div className="pointer-events-none absolute inset-x-2 top-10 hidden h-0.5 bg-slate-200/70 md:block" />
+
+          <div className="grid gap-4 md:grid-cols-3">
+            {[
+              {
+                step: "01",
+                title: "Start with a country",
+                desc: "See readiness, key policies, institutions, and recent news in one view.",
+                outcome: "Outcome: you understand the market context.",
+                href: "/countries",
+              },
+              {
+                step: "02",
+                title: "Browse the ecosystem",
+                desc: "Explore projects and startups with consistent evaluation, not noise.",
+                outcome: "Outcome: you identify viable opportunities.",
+                href: "/projects",
+              },
+              {
+                step: "03",
+                title: "Find sponsors",
+                desc: "Discover investors and partners with transparent scoring and reasons.",
+                outcome: "Outcome: you know who to contact and why.",
+                href: "/investors",
+                featured: true,
+              },
+            ].map((s) => (
+              <a
+                key={s.step}
+                href={s.href}
+                className={[
+                  "group relative block rounded-3xl border p-6 transition",
+                  "hover:-translate-y-0.5 hover:shadow-md",
+                  "focus:outline-none focus:ring-2 focus:ring-emerald-500/40",
+                  s.featured
+                    ? "border-emerald-200 bg-gradient-to-br from-emerald-50/60 via-white to-white"
+                    : "border-slate-200 bg-slate-50 hover:border-slate-300",
+                ].join(" ")}
+              >
+                {/* step bubble sitting on the “rail” */}
+                <div className="flex items-center justify-between gap-3">
+                  <div className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-extrabold uppercase tracking-wide text-slate-600 ring-1 ring-slate-200">
+                    Step {s.step}
+                  </div>
+
+                  <div className="text-xs font-semibold text-slate-500 group-hover:text-slate-700">
+                    Open →
+                  </div>
                 </div>
-              </div>
-              <div className="mt-3 text-base font-bold text-slate-900">
-                {s.title}
-              </div>
-              <p className="mt-2 text-sm leading-6 text-slate-600">{s.desc}</p>
-            </div>
-          ))}
+
+                <div className="mt-3 text-base font-extrabold text-slate-900">
+                  {s.title}
+                </div>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  {s.desc}
+                </p>
+
+                <div className="mt-3 rounded-2xl bg-slate-900/5 px-3 py-2 text-xs font-semibold text-slate-700">
+                  {s.outcome}
+                </div>
+              </a>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -279,35 +318,44 @@ export default function Home() {
               Matching
             </div>
             <h2 className="mt-1 text-2xl font-extrabold tracking-tight text-slate-950">
-              Find the best fit for you as an investor, entrepreneur, or policy
-              maker.
+              Transparent matching you can audit
             </h2>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              Matches are evaluated on clear criteria - so you can trust what
-              you're seeing and adjust assumptions before outreach.
+              Every match is built from explicit criteria — so you can validate
+              fit, spot gaps early, and adjust assumptions before outreach.
             </p>
 
-            <div className="mt-6 space-y-3">
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
               {[
                 {
-                  title: "Transparent criteria",
-                  desc: "Sector, stage, ticket size, and geography coverage.",
+                  title: "Criteria are visible",
+                  desc: "Sector, stage, ticket size, geography, and stated thesis.",
                 },
                 {
-                  title: "Clear explanations",
-                  desc: "Every score comes with the “why” - strong fits and weak points.",
+                  title: "Explanations are explicit",
+                  desc: "Strong fits + weak points, not a black-box score.",
                 },
               ].map((i) => (
                 <div
                   key={i.title}
                   className="rounded-2xl border border-slate-200 bg-slate-50 p-5"
                 >
-                  <div className="text-sm font-bold text-slate-900">
+                  <div className="text-sm font-extrabold text-slate-900">
                     {i.title}
                   </div>
                   <div className="mt-1 text-sm text-slate-600">{i.desc}</div>
                 </div>
               ))}
+            </div>
+
+            <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50/50 p-5">
+              <div className="text-sm font-extrabold text-slate-900">
+                Trust signal
+              </div>
+              <div className="mt-1 text-sm text-slate-700">
+                Scores are accompanied by sources (policy items) and reasoning.
+                No hidden logic.
+              </div>
             </div>
           </div>
 
@@ -317,29 +365,47 @@ export default function Home() {
               <div className="text-xs font-extrabold uppercase tracking-wide text-slate-500">
                 Example
               </div>
-              <div className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-700">
-                Match score{" "}
-                <span className="font-extrabold text-slate-900">82</span>
+
+              {/* Make score the anchor */}
+              <div className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-700 ring-1 ring-slate-200">
+                Match score
+                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-800">
+                  82
+                </span>
               </div>
             </div>
 
+            {/* INPUTS */}
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               <div className="rounded-2xl border border-slate-200 bg-white p-4">
                 <div className="text-xs font-extrabold uppercase tracking-wide text-slate-500">
                   Investor
                 </div>
-                <div className="mt-2 text-sm font-semibold text-slate-900">
+                <div className="mt-2 text-sm font-extrabold text-slate-900">
                   Infrastructure & Transition Fund
                 </div>
-                <div className="mt-2 text-xs text-slate-600">
-                  Focus: Grid / Storage / Efficiency
-                </div>
-                <div className="text-xs text-slate-600">
-                  Stage: Series A–Growth
-                </div>
-                <div className="text-xs text-slate-600">Ticket: $1–10M</div>
-                <div className="mt-2 text-xs text-slate-600">
-                  Coverage: Türkiye, Kazakhstan, Uzbekistan
+
+                <div className="mt-3 space-y-1 text-xs text-slate-600">
+                  <div>
+                    <span className="font-semibold text-slate-700">Focus:</span>{" "}
+                    Grid / Storage / Efficiency
+                  </div>
+                  <div>
+                    <span className="font-semibold text-slate-700">Stage:</span>{" "}
+                    Series A–Growth
+                  </div>
+                  <div>
+                    <span className="font-semibold text-slate-700">
+                      Ticket:
+                    </span>{" "}
+                    $1–10M
+                  </div>
+                  <div>
+                    <span className="font-semibold text-slate-700">
+                      Coverage:
+                    </span>{" "}
+                    Turkey, Kazakhstan, Uzbekistan
+                  </div>
                 </div>
               </div>
 
@@ -347,41 +413,82 @@ export default function Home() {
                 <div className="text-xs font-extrabold uppercase tracking-wide text-slate-500">
                   Project / Startup
                 </div>
-                <div className="mt-2 text-sm font-semibold text-slate-900">
+                <div className="mt-2 text-sm font-extrabold text-slate-900">
                   Grid-flex pilot → scaling rollout
                 </div>
-                <div className="mt-2 text-xs text-slate-600">Sector: Grid</div>
-                <div className="text-xs text-slate-600">Stage: Scaling</div>
-                <div className="text-xs text-slate-600">Country: Türkiye</div>
-                <div className="mt-2 text-xs text-slate-600">
-                  Need: partner + capital for rollout
+
+                <div className="mt-3 space-y-1 text-xs text-slate-600">
+                  <div>
+                    <span className="font-semibold text-slate-700">
+                      Sector:
+                    </span>{" "}
+                    Grid
+                  </div>
+                  <div>
+                    <span className="font-semibold text-slate-700">Stage:</span>{" "}
+                    Scaling
+                  </div>
+                  <div>
+                    <span className="font-semibold text-slate-700">
+                      Country:
+                    </span>{" "}
+                    Turkey
+                  </div>
+                  <div>
+                    <span className="font-semibold text-slate-700">Need:</span>{" "}
+                    Partner + capital for rollout
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4">
-              <div className="text-xs font-extrabold uppercase tracking-wide text-slate-500">
-                Why this scores high
+            {/* WHY / FRICTION as two columns on desktop */}
+            <div className="mt-4 grid gap-3 md:grid-cols-2">
+              <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                <div className="text-xs font-extrabold uppercase tracking-wide text-slate-500">
+                  Why it scores high
+                </div>
+                <ul className="mt-2 space-y-2 text-sm text-slate-700">
+                  {[
+                    ["Sector match", "Grid focus aligns with thesis."],
+                    ["Stage fit", "Scaling is within target stage."],
+                    ["Ticket fit", "Funding range matches rollout needs."],
+                  ].map(([k, v]) => (
+                    <li key={k} className="flex gap-2">
+                      <span className="mt-2 h-1.5 w-1.5 rounded-full bg-emerald-500/70" />
+                      <span>
+                        <span className="font-semibold">{k}:</span> {v}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-700">
-                <li>Sector focus matches (Grid)</li>
-                <li>Stage aligns (Scaling)</li>
-                <li>Ticket range fits rollout needs</li>
-              </ul>
-            </div>
 
-            <div className="mt-3 rounded-2xl border border-slate-200 bg-white p-4">
-              <div className="text-xs font-extrabold uppercase tracking-wide text-slate-500">
-                Potential friction
+              <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                <div className="text-xs font-extrabold uppercase tracking-wide text-slate-500">
+                  Potential friction
+                </div>
+                <ul className="mt-2 space-y-2 text-sm text-slate-700">
+                  {[
+                    [
+                      "Policy maturity",
+                      "Framework depth may vary by sub-sector.",
+                    ],
+                  ].map(([k, v]) => (
+                    <li key={k} className="flex gap-2">
+                      <span className="mt-2 h-1.5 w-1.5 rounded-full bg-slate-400/70" />
+                      <span>
+                        <span className="font-semibold">{k}:</span> {v}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-700">
-                <li>Policy framework maturity may not be perfect</li>
-              </ul>
             </div>
 
             <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
               <div className="text-xs text-slate-600">
-                Transparent breakdown in the product - not hidden logic.
+                Transparent breakdown in the product — not hidden logic.
               </div>
               <a
                 href="/projects"
@@ -396,56 +503,108 @@ export default function Home() {
 
       {/* WHO IT'S FOR */}
       <section
-        id="#who-is-it-for"
+        id="who-is-it-for"
         className="rounded-3xl border border-slate-200 bg-white p-7 shadow-sm md:p-10"
       >
-        <div className="text-xs font-extrabold uppercase tracking-wide text-slate-500">
-          Who is it for?
+        <div className="max-w-3xl">
+          <div className="text-xs font-extrabold uppercase tracking-wide text-slate-500">
+            Who is it for?
+          </div>
+          <h2 className="mt-1 text-2xl font-extrabold tracking-tight text-slate-950">
+            Same data. Different decisions.
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            Pick your perspective — CECECO shows the same market truth as
+            country context, opportunity pipeline, or funding fit.
+          </p>
         </div>
-        <h2 className="mt-1 text-2xl font-extrabold tracking-tight text-slate-950">
-          Investors, entrepreneurs, policy makers or just interested in clean
-          energy - same truth, different views
-        </h2>
 
         <div className="mt-7 grid gap-4 lg:grid-cols-3">
           {[
             {
               title: "Investors & partners",
+              lead: "Screen markets and opportunities faster.",
               bullets: [
-                "Find the best projects and startups to invest in",
-                "Browse the market state and build your strategy with most recent factors",
+                [
+                  "Shortlist faster",
+                  "Compare markets with decision-ready signals.",
+                ],
+                [
+                  "Reduce outreach waste",
+                  "See fit + gaps before you message anyone.",
+                ],
+                [
+                  "De-risk early",
+                  "Spot policy/market friction before committing time.",
+                ],
               ],
+              cta: "Explore countries →",
+              href: "/countries",
+              featured: true,
             },
             {
               title: "Project & Startup builders",
+              lead: "Validate market entry and investor fit.",
               bullets: [
-                "Find aligned investors and partners faster",
-                "Use match reasons to refine your strategy",
-                "Validate market entry with country context",
+                ["Find aligned capital", "Match by thesis, stage, and ticket."],
+                [
+                  "Improve positioning",
+                  "Use match reasons to refine your narrative.",
+                ],
+                [
+                  "Choose the right markets",
+                  "Enter with policy + ecosystem context.",
+                ],
               ],
+              cta: "Browse projects →",
+              href: "/projects",
             },
             {
-              title: "Policy makers & people interested in clean energy",
+              title: "Policy makers & analysts",
+              lead: "See bottlenecks and investment unlockers.",
               bullets: [
-                "See market gaps and bottlenecks in your country",
-                "Compare readiness signals in your country with other countries",
-                "Track frameworks that unlock investment in your country",
+                ["Benchmark", "Compare readiness signals across peers."],
+                ["Spot gaps", "Identify missing frameworks and institutions."],
+                ["Track progress", "Follow policy items with linked sources."],
               ],
+              cta: "See country view →",
+              href: "/countries",
             },
           ].map((a) => (
-            <div
+            <a
               key={a.title}
-              className="rounded-3xl border border-slate-200 bg-slate-50 p-6 shadow-sm"
+              href={a.href}
+              className={[
+                "group block rounded-3xl border p-6 transition",
+                "hover:-translate-y-0.5 hover:shadow-md",
+                "focus:outline-none focus:ring-2 focus:ring-emerald-500/40",
+                a.featured
+                  ? "border-emerald-200 bg-gradient-to-br from-emerald-50/60 via-white to-white"
+                  : "border-slate-200 bg-slate-50 hover:border-slate-300",
+              ].join(" ")}
             >
-              <div className="text-base font-bold text-slate-900">
+              <div className="text-base font-extrabold text-slate-900">
                 {a.title}
               </div>
-              <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-6 text-slate-700">
-                {a.bullets.map((b) => (
-                  <li key={b}>{b}</li>
+              <div className="mt-2 text-sm font-semibold text-slate-800">
+                {a.lead}
+              </div>
+
+              <ul className="mt-4 space-y-2 text-sm text-slate-700">
+                {a.bullets.map(([k, v]) => (
+                  <li key={k} className="flex gap-2">
+                    <span className="mt-2 h-1.5 w-1.5 rounded-full bg-emerald-500/70" />
+                    <span>
+                      <span className="font-semibold">{k}:</span> {v}
+                    </span>
+                  </li>
                 ))}
               </ul>
-            </div>
+
+              <div className="mt-4 text-sm font-semibold text-emerald-700 group-hover:text-emerald-800">
+                {a.cta}
+              </div>
+            </a>
           ))}
         </div>
       </section>
