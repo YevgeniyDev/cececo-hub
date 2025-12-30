@@ -2,7 +2,7 @@ export default function Home() {
   const apiBase =
     process.env.NEXT_PUBLIC_API_BASE ||
     process.env.API_INTERNAL_BASE ||
-    "https://cececo-hub.onrender.com" || 
+    "https://cececo-hub.onrender.com" ||
     "https://cececo-hub.vercel.app";
 
   const apiDocsUrl = `${String(apiBase).replace(/\/+$/, "")}/docs`;
@@ -81,12 +81,6 @@ export default function Home() {
                 >
                   Live updates
                 </a>
-              </div>
-
-              <div className="mt-5 text-xs text-slate-500">
-                Data note: live news links are fetched from public sources via
-                GDELT. Country indicators are designed to be transparent and
-                replaceable with official datasets.
               </div>
             </div>
 
@@ -348,48 +342,6 @@ export default function Home() {
             <li>Review geo-policy context before outreach</li>
             <li>Use live news as diligence prompts</li>
           </ul>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="relative overflow-hidden rounded-3xl border border-slate-200 bg-slate-950 p-7 text-white shadow-sm md:p-10">
-        <div className="pointer-events-none absolute inset-0">
-          <div className="absolute -left-24 -top-24 h-72 w-72 rounded-full bg-blue-500/20 blur-3xl" />
-          <div className="absolute -right-28 top-10 h-80 w-80 rounded-full bg-emerald-500/20 blur-3xl" />
-        </div>
-
-        <div className="relative flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <h2 className="text-2xl font-extrabold tracking-tight">
-              Start exploring today
-            </h2>
-            <p className="mt-2 max-w-2xl text-sm text-white/80">
-              Countries, projects, investors, and live updates — built for fast
-              decisions and clear demos. Contribute your own entries to grow the
-              ecosystem.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap gap-3">
-            <a
-              href="/countries"
-              className="inline-flex items-center justify-center rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-100"
-            >
-              Explore countries →
-            </a>
-            <a
-              href="/projects"
-              className="inline-flex items-center justify-center rounded-xl border border-white/20 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-white/10"
-            >
-              Browse projects
-            </a>
-            <a
-              href="/news"
-              className="inline-flex items-center justify-center rounded-xl border border-white/20 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-white/10"
-            >
-              Open live updates
-            </a>
-          </div>
         </div>
       </section>
 
