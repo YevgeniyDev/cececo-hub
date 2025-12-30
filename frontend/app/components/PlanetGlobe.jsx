@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ECO_COUNTRIES } from "@/data/ecoCountries";
+import { ECO_COUNTRIES } from "../data/ecoCountries";
 
 const Globe = dynamic(() => import("react-globe.gl"), { ssr: false });
 
