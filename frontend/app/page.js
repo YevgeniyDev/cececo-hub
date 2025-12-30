@@ -215,7 +215,7 @@ export default function Home() {
               Transparent matching you can audit
             </h2>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              Every match is built from explicit criteria — so you can validate
+              Every match is built from explicit criteria - so you can validate
               fit, spot gaps early, and adjust assumptions before outreach.
             </p>
 
@@ -382,7 +382,7 @@ export default function Home() {
 
             <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
               <div className="text-xs text-slate-600">
-                Transparent breakdown in the product — not hidden logic.
+                Transparent breakdown in the product - not hidden logic.
               </div>
               <a
                 href="/projects"
@@ -408,7 +408,7 @@ export default function Home() {
             Same data. Different decisions.
           </h2>
           <p className="mt-2 text-sm leading-6 text-slate-600">
-            Pick your perspective — CECECO shows the same market truth as
+            Pick your perspective - CECECO shows the same market truth as
             country context, opportunity pipeline, or funding fit.
           </p>
         </div>
