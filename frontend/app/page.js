@@ -9,7 +9,6 @@ export default function Home() {
     "https://cececo-hub.vercel.app";
 
   const sections = [
-    { label: "What you get", href: "#what-you-get" },
     { label: "How it works", href: "#how-it-works" },
     { label: "Matching", href: "#matching" },
     { label: "Who is it for?", href: "#who-is-it-for" },
@@ -96,14 +95,14 @@ export default function Home() {
         </div>
       </section>
 
-      {/* WHAT YOU GET */}
+      {/* how-it-works */}
       <section
-        id="what-you-get"
+        id="how-it-works"
         className="rounded-3xl border border-slate-200 bg-white p-7 shadow-sm md:p-10"
       >
         <div className="max-w-3xl">
           <div className="text-xs font-extrabold uppercase tracking-wide text-slate-500">
-            What you get
+            How it works
           </div>
           <h2 className="mt-1 text-2xl font-extrabold tracking-tight text-slate-950">
             Built around decisions, not raw data volume
@@ -199,98 +198,6 @@ export default function Home() {
               </div>
             </a>
           ))}
-        </div>
-      </section>
-
-      {/* HOW IT WORKS */}
-      <section
-        id="how-it-works"
-        className="rounded-3xl border border-slate-200 bg-white p-7 shadow-sm md:p-10"
-      >
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div className="max-w-3xl">
-            <div className="text-xs font-extrabold uppercase tracking-wide text-slate-500">
-              How it works
-            </div>
-            <h2 className="mt-1 text-2xl font-extrabold tracking-tight text-slate-950">
-              From signal → decision in three steps
-            </h2>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
-              Designed for daily diligence: quick context, consistent
-              evaluation, and clear next actions.
-            </p>
-          </div>
-
-          <a
-            href="/countries"
-            className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50"
-          >
-            Start with a country →
-          </a>
-        </div>
-
-        {/* “rail” that connects steps (design intent) */}
-        <div className="relative mt-7">
-          <div className="pointer-events-none absolute inset-x-2 top-10 hidden h-0.5 bg-slate-200/70 md:block" />
-
-          <div className="grid gap-4 md:grid-cols-3">
-            {[
-              {
-                step: "01",
-                title: "Start with a country",
-                desc: "See readiness, key policies, institutions, and recent news in one view.",
-                outcome: "Outcome: you understand the market context.",
-                href: "/countries",
-              },
-              {
-                step: "02",
-                title: "Browse the ecosystem",
-                desc: "Explore projects and startups with consistent evaluation, not noise.",
-                outcome: "Outcome: you identify viable opportunities.",
-                href: "/projects",
-              },
-              {
-                step: "03",
-                title: "Find sponsors",
-                desc: "Discover investors and partners with transparent scoring and reasons.",
-                outcome: "Outcome: you know who to contact and why.",
-                href: "/investors",
-              },
-            ].map((s) => (
-              <a
-                key={s.step}
-                href={s.href}
-                className={[
-                  "group relative block rounded-3xl border p-6 transition",
-                  "hover:-translate-y-0.5 hover:shadow-md",
-                  "focus:outline-none focus:ring-2 focus:ring-emerald-500/40",
-                  "border-slate-200 bg-slate-50 hover:border-slate-300",
-                ].join(" ")}
-              >
-                {/* step bubble sitting on the “rail” */}
-                <div className="flex items-center justify-between gap-3">
-                  <div className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-extrabold uppercase tracking-wide text-slate-600 ring-1 ring-slate-200">
-                    Step {s.step}
-                  </div>
-
-                  <div className="text-xs font-semibold text-slate-500 group-hover:text-slate-700">
-                    Open →
-                  </div>
-                </div>
-
-                <div className="mt-3 text-base font-extrabold text-slate-900">
-                  {s.title}
-                </div>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
-                  {s.desc}
-                </p>
-
-                <div className="mt-3 rounded-2xl bg-slate-900/5 px-3 py-2 text-xs font-semibold text-slate-700">
-                  {s.outcome}
-                </div>
-              </a>
-            ))}
-          </div>
         </div>
       </section>
 
